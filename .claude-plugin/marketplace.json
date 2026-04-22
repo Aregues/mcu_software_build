@@ -1,0 +1,21 @@
+{
+    "name": "Simon",
+    "owner": {
+        "name": "Simon Dev",
+        "email": "devtools@example.com"
+    },
+    "plugins": [
+        {
+            "name": "MCU_software_build",
+            "source": {
+                "source": "github",
+                "repo": "owner/plugin-repo"
+            },
+            "description": "Automatic code formatting on save",
+            "version": "0.1.0",
+            "author": {
+                "name": "Simon Dev"
+            }
+        }
+    ]
+}
