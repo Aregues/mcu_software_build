@@ -9,7 +9,7 @@
             "name": "MCU_software_build",
             "source": {
                 "source": "github",
-                "repo": "owner/plugin-repo"
+                "repo": "Aregues/mcu_software_build"
             },
             "description": "Automatic code formatting on save",
             "version": "0.1.0",
