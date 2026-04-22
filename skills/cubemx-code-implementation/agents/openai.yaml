@@ -1,0 +1,4 @@
+interface:
+  display_name: "框架上的程序构建"
+  short_description: "Implement, build, and flash CubeMX-generated STM32 projects"
+  default_prompt: "Use $cubemx-code-implementation to implement, build, verify, or flash embedded project code under a CubeMX-generated framework, including CMake/Ninja/OpenOCD projects, while keeping CubeMX structure intact and placing business logic in app and drivers in Module."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Embedded GDB Debug"
+  short_description: "Debug STM32 firmware with OpenOCD and GDB"
+  default_prompt: "Use $embedded-gdb-openocd-debug to debug STM32 firmware with OpenOCD and arm-none-eabi-gdb, including connecting, breakpoints, stepping, variables, registers, memory, and troubleshooting."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hardware Interface Writer"
+  short_description: "Analyze MCU manuals and write interface JSON"
+  default_prompt: "Use $hardware-interface-writer to confirm the requirement document, collect MCU pin definitions and module folders under docs\\Module, textify PDFs, inspect images for exposed pins, analyze feasibility, and write the hardware interface connection file if feasible."
