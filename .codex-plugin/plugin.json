@@ -1,0 +1,37 @@
+{
+  "name": "mcu-software-build",
+  "version": "1.0.0",
+  "description": "End-to-end MCU embedded software development plugin for Codex, from requirements and hardware analysis to CubeMX generation, implementation, and GDB/OpenOCD debugging.",
+  "author": {
+    "name": "Simon Dev",
+    "email": "devtools@example.com"
+  },
+  "license": "Proprietary",
+  "keywords": [
+    "mcu",
+    "embedded",
+    "stm32",
+    "cubemx",
+    "firmware",
+    "openocd",
+    "gdb"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "MCU Software Build",
+    "shortDescription": "STM32 firmware workflow from requirements to target debugging.",
+    "longDescription": "Provides a complete STM32 and Cortex-M workflow covering requirements capture, hardware interface analysis, software design, CubeMX framework setup, code implementation, and on-target debugging with GDB and OpenOCD.",
+    "developerName": "Simon Dev",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Collect MCU project requirements and draft an SRS.",
+      "Analyze MCU interfaces and write a hardware connection spec.",
+      "Guide STM32CubeMX setup and review the generated framework."
+    ],
+    "brandColor": "#0F766E"
+  }
+}
