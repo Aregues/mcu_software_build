@@ -1,6 +1,6 @@
 ---
 name: cubemx-framework-guide
-description: Identify the active embedded project from docs, read its software design document and hardware connection diagram, generate a concrete STM32CubeMX setup guide under docs/CubeMX_build, then verify the user-generated project framework against the documented module requirements and distinguish between guide defects and user configuration mistakes.
+description: Identify the active embedded project from docs, read its software design document and hardware connection diagram, generate a concrete STM32CubeMX setup guide under docs/CubeMX_build, verify the user-generated project framework against the documented module requirements, configure parent-workspace VS Code C/C++ settings after the framework and ARM GCC compiler are confirmed, and distinguish between guide defects and user configuration mistakes.
 ---
 
 # CubeMX Framework Guide
@@ -23,6 +23,7 @@ Read `references/framework-checklist.md` before reviewing the generated project 
 6. Stop after the guide is delivered and wait for the user to generate the framework in CubeMX.
 7. After the user says the framework is generated, inspect the produced project and verify it against the software design document.
 8. If gaps exist, decide whether the guide document is incomplete or the user configuration differs from the guide, then act accordingly.
+9. After the framework is confirmed usable and the ARM GCC compiler path is known and exists, configure the parent workspace `.vscode` files so VS Code can open the repository root while CMake and IntelliSense still target the generated CubeMX project.
 
 ## Project Identification
 
@@ -122,6 +123,29 @@ Read `references/framework-checklist.md` before reviewing the generated project 
   - do not rewrite the whole guide unless it is ambiguous
   - point to the exact mismatched setting and the expected value
   - ask the user to correct the CubeMX configuration and regenerate if needed
+
+## Parent Workspace VS Code Setup
+
+- Execute this step only after:
+  - the generated CubeMX/CMake framework has passed review or is explicitly accepted as usable
+  - the ARM GCC compiler path has been specified and `arm-none-eabi-gcc.exe` exists
+- Use this step when the user wants to open the repository parent directory in VS Code instead of opening the generated CubeMX project directory directly.
+- Locate:
+  - the repository parent workspace directory
+  - the generated CMake project directory containing `CMakeLists.txt` or `CMakePresets.json`
+  - the active build directory containing `compile_commands.json`
+  - the ARM GCC compiler, normally `.../bin/arm-none-eabi-gcc.exe`
+- In the parent workspace `.vscode/settings.json`, ensure these settings point at the generated project:
+  - `"cmake.sourceDirectory": "<absolute generated project directory>"`
+  - `"C_Cpp.default.compileCommands": "${workspaceFolder}/<generated-project>/build/<preset-or-config>/compile_commands.json"`
+  - `"C_Cpp.default.compilerPath": "<absolute path to arm-none-eabi-gcc.exe>"`
+  - `"C_Cpp.default.intelliSenseMode": "windows-gcc-arm"` on Windows
+- In the parent workspace `.vscode/c_cpp_properties.json`, if the file exists or is already used, keep its `compileCommands` path aligned with the same `compile_commands.json`, set `compilerPath` to `arm-none-eabi-gcc.exe`, and use `windows-gcc-arm` for `intelliSenseMode` on Windows.
+- Do not use host compilers such as MinGW `gcc.exe` for STM32 IntelliSense. Use the same ARM GCC family used by the CMake build.
+- Preserve unrelated existing VS Code settings. Change only CMake/C_Cpp fields needed for source directory, compile commands, compiler path, and IntelliSense mode.
+- After editing, verify that the JSON files parse and that both `compile_commands.json` and `arm-none-eabi-gcc.exe` exist.
+- Tell the user to run `CMake: Configure` and then `C/C++: Reset IntelliSense Database` or reload VS Code.
+- If STM32Cube CMake Support still warns that the parent workspace contains multiple CMake projects, explain that this is a workspace recommendation; it can be ignored when CMake and C/C++ navigation work, or avoided by opening the generated project directory directly.
 
 ## Output Rules
 

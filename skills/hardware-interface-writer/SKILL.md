@@ -1,6 +1,6 @@
 ---
 name: hardware-interface-writer
-description: Guide MCU hardware interface feasibility analysis and hardware connection file writing. Use when Codex needs to confirm a requirement document, collect an MCU pin definition table or pinout diagram, collect module manuals organized under docs/Module/module-name folders with PDFs and images, convert manuals to Markdown, extract image-confirmed exposed module pins, analyze module and MCU peripheral sufficiency, and write a hardware_interface-style connection JSON when the design is feasible.
+description: Guide MCU hardware interface feasibility analysis and hardware connection file writing. Use when Codex needs to confirm a requirement document, collect an MCU pin definition table or pinout diagram, collect module manuals organized under docs/Module/module-name folders with PDFs and images, convert module manuals and MCU pin-definition PDFs to Markdown, extract image-confirmed exposed module pins, analyze module and MCU peripheral sufficiency, and write a hardware_interface-style connection JSON when the design is feasible.
 ---
 
 # Hardware Interface Writer
@@ -11,6 +11,7 @@ Use this skill to turn a requirement document, MCU pin information, and module m
 
 - Requirement document: confirm the exact file first. If the user has not identified one, ask them to upload or choose it before analysis.
 - MCU pin definition table: always request it. Treat this as required for final pin allocation.
+- MCU pin definition PDF (when the pin definition table or pinout is provided as PDF): collect it and convert it to Markdown before feasibility analysis. Recommended location is `docs\MCU\`.
 - MCU pinout diagram: request it when the pin table does not include multiplexing, package pins, power pins, or alternate functions clearly enough.
 - Module manuals: request module folders under `docs\Module\<模块名>` for modules that implement required functions. Each module folder may contain PDFs and images. Do not require manuals for basic parts such as buttons, LEDs, simple resistors, or generic pull-ups unless the user asks for them.
 
@@ -23,7 +24,7 @@ Use this skill to turn a requirement document, MCU pin information, and module m
    - Mark a module `likely sufficient` only if its name or visible metadata clearly matches the required function.
    - Mark it `unclear` when the interface, voltage, range, channel count, or protocol cannot be confirmed yet.
    - Mark it `insufficient` when the visible information already conflicts with the requirement.
-5. Convert module manuals to Markdown with the bundled script. Do not call or depend on any external PDF-conversion skill. In the preferred layout, the script writes `docs\Module\<模块名>\manual.md`, textifies PDFs first, and appends image-review placeholders.
+5. Convert PDFs to Markdown with the bundled script, including both module manuals and MCU pin-definition PDFs. Do not call or depend on any external PDF-conversion skill. In the preferred module layout, the script writes `docs\Module\<模块名>\manual.md`, textifies PDFs first, and appends image-review placeholders.
 
    The script requires `PyMuPDF`. Install it once before first use:
 
@@ -33,6 +34,12 @@ Use this skill to turn a requirement document, MCU pin information, and module m
 
 ```powershell
 python "<skill_dir>\scripts\pdf_to_md.py" --modules-dir ".\docs\Module"
+```
+
+Also convert MCU pin-definition PDFs to Markdown before pin allocation analysis (example output folder under `docs\MCU\markdown`):
+
+```powershell
+python "<skill_dir>\scripts\pdf_to_md.py" ".\docs\MCU\pin_definition.pdf" --output-dir ".\docs\MCU\markdown"
 ```
 
 For a specific module folder:
@@ -66,6 +73,7 @@ When reporting results, include:
 - Inputs still missing, if any.
 - Module sufficiency summary with `likely sufficient`, `unclear`, or `insufficient`.
 - Manual files used, including module `manual.md` files and any image-confirmed exposed pin overrides.
+- Converted MCU pin-definition Markdown files used (when MCU pin definition was provided as PDF).
 - MCU pin/peripheral allocation table when enough pin data is available.
 - Feasibility decision: `feasible`, `feasible with assumptions`, or `not feasible`.
 - Created or updated hardware connection file path when a file was written.

@@ -1,4 +1,4 @@
 interface:
   display_name: "CubeMX 程序框架指引"
-  short_description: "Generate and verify STM32CubeMX framework setup guides from project docs"
-  default_prompt: "Use $cubemx-framework-guide to identify the active project, generate a CubeMX setup guide under docs/CubeMX_build, and later verify the generated framework."
+  short_description: "Generate and verify STM32CubeMX framework guides, then align VS Code C/C++ settings"
+  default_prompt: "Use $cubemx-framework-guide to identify the active project, generate a CubeMX setup guide under docs/CubeMX_build, verify the generated framework, and configure parent-workspace VS Code C/C++ settings after ARM GCC is confirmed."

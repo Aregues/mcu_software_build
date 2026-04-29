@@ -52,6 +52,19 @@ If either file is missing, ask the user to provide or identify it before draftin
 - Prefer static and auditable design decisions. If memory use, execution latency, queue depth, retry behavior, timeout handling, or recovery behavior is relevant, describe the chosen bounds or state `TBD` explicitly.
 - Avoid vague architecture language. State what makes the design implementable on the target MCU or board under its timing, peripheral, and memory constraints.
 
+## CubeMX Framework Alignment
+
+- When the target project is expected to be implemented on an STM32CubeMX-generated framework, the design document must define implementation-facing architecture boundaries without duplicating the later code-implementation rules.
+- Treat CubeMX-generated `Core`, `Drivers`, middleware, startup files, linker scripts, and project metadata as the base framework. The design should state that project-owned code is added around that framework rather than replacing or reorganizing it.
+- Prefer a lightweight ownership model that the implementation skill can refine:
+  - `app` owns business behavior, HMI flow, state machines, scheduling decisions, and project-level orchestration.
+  - `Module` owns reusable module interfaces and external-device or hardware-abstraction responsibilities.
+  - `Board` or `board` owns board-level resource binding, object creation, CubeMX handle injection, and concrete resource selection.
+  - `Config` or `config` owns project-tunable constants, thresholds, periods, retry counts, feature switches, and calibration defaults.
+- State dependency direction at a design level: business logic should depend on stable module/service abstractions, not directly on CubeMX/HAL handles, register headers, or concrete peripheral details.
+- Keep this section design-level only. Do not prescribe exact C struct layouts, ops-table implementations, generated build-file edits, callback code, compiler flags, flashing flow, or subagent implementation procedures; those belong to `cubemx-code-implementation`.
+- If the requirement or hardware artifacts do not justify one of the ownership layers, mention it as optional or `TBD` rather than forcing unnecessary folders.
+
 ## Drafting Rules
 
 - Follow the section order and numbering style from `references/software-design-template.md`.
@@ -68,6 +81,8 @@ If either file is missing, ask the user to provide or identify it before draftin
 - When describing memory, buffering, blocking behavior, concurrency, or shared data, prefer bounded and reviewable strategies. If the requirement or hardware artifacts do not justify a detail, mark it as `TBD` instead of inventing an unbounded mechanism.
 - Describe how degraded operation and protective behavior work when sensors fail, communication times out, storage is unavailable, or outputs must be forced to a safe state.
 - In the design-principles section, explicitly state that determinism and worst-case behavior take priority over peak performance whenever the two are in tension.
+- For CubeMX-based targets, describe how the architecture maps onto `app`, `Module`, `Board` or `board`, and `Config` or `config` responsibilities at a high level, while leaving concrete file names and implementation patterns to the coding phase unless already obvious from project artifacts.
+- Do not put CubeMX implementation mechanics into the design document unless they are required constraints from the requirement or hardware artifacts. It is enough to name the intended integration points, owned layers, and dependency boundaries.
 
 ## Feasibility Escalation Rules
 
@@ -116,9 +131,12 @@ Use this mapping as a checklist while drafting:
 - Exception and boundary behavior -> sections 7 and 12.
 - Hardware and architecture constraints -> section 2.3 plus sections 10 and 13.
 - Section 2.2 must explicitly state embedded design principles such as determinism over peak performance, avoidance of uncontrolled runtime behavior, and resource-bounded design decisions.
+- Section 2.3 should map the design to the expected CubeMX-based ownership layers when applicable: generated framework, `Module`, `Board` or `board`, `Config` or `config`, and `app`.
 - Section 4 must explain task periods, trigger sources, execution contexts, ordering or priority relationships, and worst-case response expectations for control, protection, and communication paths.
 - Sections 5 and 6 must describe static resource assumptions, buffer or storage boundaries, and how shared state is updated or protected across contexts.
 - Sections 7 and 12 must describe timeout handling, communication abnormal cases, sensor invalidity, degraded operation, protective actions, and the conditions for recovery or manual intervention.
+- Section 10 should identify which interactions are abstract module/service interfaces and which depend on board-level resources, without specifying detailed C implementation mechanics.
+- Section 13 should give a concise CubeMX-friendly directory ownership suggestion, including `app`, `Module`, `Board` or `board`, and `Config` or `config` when applicable.
 
 ## Quality Checks Before Saving
 
@@ -132,3 +150,5 @@ Use this mapping as a checklist while drafting:
 - Any use of dynamic memory, blocking waits, retries, deferred processing, or variable-latency behavior is either explicitly justified and bounded or explicitly marked `TBD`.
 - Resource limits and interface boundaries are reviewable: memory assumptions, buffer ownership, queue depth, persistent-storage use, and cross-context data exchange are not left ambiguous when they affect behavior.
 - Fault entry conditions, the resulting software state, the trigger owner, response timing, and recovery conditions are described for major abnormal cases.
+- For CubeMX-based targets, the design leaves a clear route to implementation: generated framework boundaries are preserved, project-owned logic has a documented home, board-resource binding is separate from business behavior, and tunable parameters have an identified owner.
+- The design does not overstep into implementation-only details such as exact driver object layout, callback body code, generated project-file edits, build commands, flashing commands, or subagent task plans.
