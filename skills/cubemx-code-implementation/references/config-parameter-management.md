@@ -111,7 +111,7 @@ If the existing project already uses `APP_` for project-wide values, keep consis
 - project timeout or retry values hard-coded in driver source
 - per-module project config headers created without an explicit architecture decision
 - module code owning business thresholds
-- core interface headers including project configuration headers
+- capability interface headers including project configuration headers
 - concrete drivers depending on broad `app` headers just to obtain parameters
 - board-resource binding or project configuration mapping placed inside `app` business code
 - RTOS task timing and stack values hidden only in task source without project-level traceability
@@ -126,5 +126,5 @@ Check these before accepting code:
 - names and units are clear
 - tunable values are traceable to requirements or software design intent
 - modules receive tunables through explicit interfaces or documented narrow mapping
-- core interface headers do not include project configuration headers
+- capability interface headers do not include project configuration headers
 - no unexplained magic numbers remain for thresholds, timeouts, retries, calibration values, task periods, queue depths, or stack sizes

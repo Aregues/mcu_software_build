@@ -1,4 +1,4 @@
 interface:
   display_name: "需求文档填写"
   short_description: "Guide users to fill a project requirements document"
-  default_prompt: "Use $requirements-doc-filling to guide the user through writing a project requirements document."
+  default_prompt: "Use $requirements-doc-filling to guide the user through writing docs/releases/<version>/requirements.md."

@@ -6,10 +6,11 @@ Use this reference when designing, implementing, or reviewing embedded modules o
 
 Design each module with four explicit layers:
 
-1. Core interface layer:
+1. Capability interface layer:
    - defines the stable abstract interface, base struct, ops function-pointer table, public wrapper functions, status enums, and capability flags when needed
    - contains no HAL, register, CubeMX-generated, board, or concrete-driver dependency
    - exposes names such as `led_base_t`, `led_ops_t`, `led_on()`, `led_off()`, `led_set_brightness()`
+   - preferably lives in `Common/*_if.h` and optional `Common/*_if.c`; if the existing project already has a different interface location, keep the same dependency boundary
 2. Concrete driver layer:
    - defines derived structs and concrete initialization functions such as `led_gpio_t`, `led_gpio_init()`, `led_pwm_t`, `led_pwm_init()`
    - embeds the base struct as the first member of each derived struct so a `derived *` can be used through `base *`
@@ -19,7 +20,7 @@ Design each module with four explicit layers:
    - creates static or owned object instances, supplies GPIO ports, pins, timer channels, I2C/SPI/UART handles, DMA buffers, and configuration values
    - calls concrete init functions
    - returns or registers only abstract base pointers for the business layer
-   - lives in a dedicated top-level directory such as `Board` or `board`, at the same level as `app` and `Module`
+   - lives in a dedicated top-level directory such as `Board` or `board`, at the same level as `Common`, `app`, and `Module`
    - must not be placed inside concrete driver folders and must not be mixed into the business `app` directory
 4. Business application layer:
    - stores and calls only abstract base pointers, such as `led_base_t *`
@@ -32,16 +33,17 @@ Adapt names to the module domain but preserve the dependency boundaries:
 
 ```text
 <CubeMX project>/
+  Common/
+    led_if.h             # capability interface
+    led_if.c             # public wrapper functions and common validation, if needed
   Module/
     led/
-      led.h              # core abstract interface
-      led.c              # public wrapper functions and common validation
       led_gpio.h         # GPIO-derived type and init declaration
       led_gpio.c         # GPIO concrete behavior and ops binding
       led_pwm.h          # PWM-derived type and init declaration, when needed
       led_pwm.c          # PWM concrete behavior and ops binding
   app/
-    app.c                # business logic; includes led.h only
+    app.c                # business logic; includes led_if.h only
     app.h
   Board/
     board.h              # abstract board services exported to app
@@ -52,8 +54,8 @@ Keep CubeMX files such as `Core/Src/main.c`, `Core/Inc/main.h`, `Drivers`, start
 
 ## File Responsibilities
 
-- `xxx.h`: abstract base type, ops table, error/status enum, capability flags, and public wrappers.
-- `xxx.c`: wrapper functions such as `xxx_start()`, `xxx_stop()`, `xxx_read()`, including null checks, unsupported-operation handling, and stable API behavior.
+- `Common/xxx_if.h`: abstract base type, ops table, error/status enum, capability flags, and public wrappers.
+- `Common/xxx_if.c`: wrapper functions such as `xxx_start()`, `xxx_stop()`, `xxx_read()`, including null checks, unsupported-operation handling, and stable API behavior when wrappers need implementation.
 - `xxx_gpio.h` / `xxx_pwm.h` / `xxx_i2c.h`: concrete derived type, hardware-resource config struct, and init declaration.
 - `xxx_gpio.c` / `xxx_pwm.c` / `xxx_i2c.c`: concrete HAL/CubeMX behavior, private static ops functions, and ops-table binding.
 - `Board/board.h`: abstract object accessors or board-level init API used by `app`; do not expose concrete driver types here unless the file is explicitly board-private.
@@ -62,15 +64,15 @@ Keep CubeMX files such as `Core/Src/main.c`, `Core/Inc/main.h`, `Drivers`, start
 
 ## Header Include Relationships
 
-- `app.c` includes `app.h`, `board.h`, and core interface headers such as `led.h`.
+- `app.c` includes `app.h`, `board.h`, and capability interface headers such as `led_if.h`.
 - `app.c` does not include `led_gpio.h`, `led_pwm.h`, `main.h`, `stm32xxxx_hal.h`, GPIO/PWM/I2C/SPI headers, or register headers.
 - `Board/board.c` may include `main.h`, generated CubeMX handle declarations, and concrete driver headers such as `led_gpio.h`.
-- concrete drivers include their own concrete header, the core interface header, and required HAL/CubeMX headers.
-- core interface headers include only standard C headers needed for fixed-width types and booleans, such as `<stdint.h>`, `<stdbool.h>`, and `<stddef.h>`.
+- concrete drivers include their own concrete header, the capability interface header, and required HAL/CubeMX headers.
+- capability interface headers include only standard C headers needed for fixed-width types and booleans, such as `<stdint.h>`, `<stdbool.h>`, and `<stddef.h>`.
 
-## Core Struct Pattern
+## Capability Struct Pattern
 
-Use this C pattern for modules that need polymorphism:
+Use this C pattern for modules that need polymorphism. Place it in `Common/led_if.h` or the project's established capability-interface location:
 
 ```c
 typedef struct led_base led_base_t;
@@ -224,7 +226,7 @@ When asked to design or implement a specified module, include or produce these i
 1. recommended file structure
 2. responsibility of each file
 3. header include relationships
-4. core struct and ops-table design
+4. capability struct and ops-table design
 5. initialization and board-binding flow
 6. business-layer call example in C
 7. dependency-direction explanation
@@ -238,7 +240,7 @@ Reject or correct these patterns during design and review:
 
 - business code includes `stm32xxxx_hal.h`, `main.h`, `gpio.h`, `tim.h`, `i2c.h`, `spi.h`, `usart.h`, or concrete headers such as `led_gpio.h`
 - business code switches on concrete device type or casts `led_base_t *` to `led_gpio_t *`
-- core interface headers include HAL/CubeMX headers or mention GPIO ports, timer handles, I2C/SPI handles, DMA handles, or chip registers
+- capability interface headers include HAL/CubeMX headers or mention GPIO ports, timer handles, I2C/SPI handles, DMA handles, or chip registers
 - concrete drivers call business-layer functions or depend on `app` state machines
 - board binding exposes concrete objects to application code when an abstract pointer is sufficient
 - optional features are forced into every implementation instead of using capability queries or extension interfaces

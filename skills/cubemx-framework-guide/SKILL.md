@@ -1,11 +1,26 @@
 ---
 name: cubemx-framework-guide
-description: Identify the active embedded project from docs, read its software design document and hardware connection diagram, generate a concrete STM32CubeMX setup guide under docs/CubeMX_build, verify the user-generated project framework against the documented module requirements, configure parent-workspace VS Code C/C++ settings after the framework and ARM GCC compiler are confirmed, and distinguish between guide defects and user configuration mistakes.
+description: Identify the active release under docs/releases/VERSION, read its software_design.md and hardware.json, generate a concrete STM32CubeMX setup guide as docs/releases/VERSION/cubemx_build.md, verify the user-generated project framework against the documented module requirements, configure parent-workspace VS Code C/C++ settings after the framework and ARM GCC compiler are confirmed, and distinguish between guide defects and user configuration mistakes.
 ---
 
 # CubeMX Framework Guide
 
 Use this skill when Codex needs to guide the user to generate an STM32CubeMX project skeleton from existing project documents, then review the generated framework.
+
+## Release Document Layout
+
+Use the single-project release layout:
+
+```text
+docs/releases/<version>/
+  requirements.md
+  hardware.json
+  software_design.md
+  cubemx_build.md
+  notes.md
+```
+
+If the user names a release version, use that version exactly after sanitizing it to a directory-safe name such as `v1.0`. If the user does not name a version, use the newest semantic version under `docs/releases`. If no release exists, report that the release documents are missing instead of guessing project inputs.
 
 Read `references/guide-template.md` before drafting the CubeMX guide document.
 
@@ -19,7 +34,7 @@ Read `references/framework-checklist.md` before reviewing the generated project 
 2. Read the software design document and hardware connection diagram for that project.
 3. Read `references/guide-template.md` to lock the required output structure.
 4. Read `references/bionic-fish-guide-instance.md` as a style and completeness reference when it is relevant.
-5. Draft a concrete CubeMX setup guide and save it under `docs/CubeMX_build`.
+5. Draft a concrete CubeMX setup guide and save it as `docs/releases/<version>/cubemx_build.md`.
 6. Stop after the guide is delivered and wait for the user to generate the framework in CubeMX.
 7. After the user says the framework is generated, inspect the produced project and verify it against the software design document.
 8. If gaps exist, decide whether the guide document is incomplete or the user configuration differs from the guide, then act accordingly.
@@ -27,12 +42,9 @@ Read `references/framework-checklist.md` before reviewing the generated project 
 
 ## Project Identification
 
-- Search these locations first:
-  - `docs/software_design`
-  - `docs/Hardware`
-  - `docs/Requirements`
-- Prefer a project whose software design document and hardware connection diagram share the same project stem.
-- Filenames usually follow `<project-name>-<YY-MM-DD>.<ext>`. Match by project stem first, then prefer the newest date.
+- Search `docs/releases` first.
+- Prefer the active release whose directory contains both `software_design.md` and `hardware.json`.
+- When multiple release directories are plausible, prefer the newest semantic version, for example `v1.0` over `v0.9`, unless the user names a version.
 - Treat the hardware connection diagram as the source of pin usage and external module wiring. It may be markdown, JSON, image-adjacent metadata, or another structured document.
 - If multiple candidates are still plausible, present the ambiguity briefly and ask the user which project to use before drafting.
 
@@ -49,12 +61,12 @@ Read `references/framework-checklist.md` before reviewing the generated project 
   - pin-to-module mappings
   - power, reset, boot, and debug interfaces
   - external oscillators, communication transceivers, sensors, actuators, and reserved pins
-- Read module manuals under `docs/Module` only when the software design document or hardware diagram leaves a peripheral choice or parameter unclear.
+- Read module manuals under `docs/modules` only when the software design document or hardware diagram leaves a peripheral choice or parameter unclear.
 
 ## Guide Document Rules
 
-- Save the generated guide to `docs/CubeMX_build/<project-name>-<YY-MM-DD>.md`.
-- Create `docs/CubeMX_build` if it does not exist.
+- Save the generated guide to `docs/releases/<version>/cubemx_build.md`.
+- Create `docs/releases/<version>` if it does not exist.
 - Follow the structure in `references/guide-template.md`.
 - Use `references/bionic-fish-guide-instance.md` as a concrete example of:
   - how much detail to provide for each CubeMX screen
@@ -116,7 +128,7 @@ Read `references/framework-checklist.md` before reviewing the generated project 
   - `Guide gap`: the guide document missed a required setting, wrote an ambiguous instruction, or contained a wrong recommendation.
   - `User configuration issue`: the guide was sufficient, but the generated project does not follow it.
 - For a `Guide gap`:
-  - update the guide document under `docs/CubeMX_build`
+  - update the guide document at `docs/releases/<version>/cubemx_build.md`
   - explain what changed and why
   - tell the user exactly which CubeMX steps must be redone
 - For a `User configuration issue`:

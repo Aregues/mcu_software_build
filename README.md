@@ -18,13 +18,42 @@ Covers the full lifecycle from requirements gathering to on-target debugging, de
 ## Recommended Workflow
 
 ```
-1. /requirements-doc-filling    → docs/Requirements/<project>.md
-2. /hardware-interface-writer   → docs/Hardware/<project>.json
-3. /software-design-doc-writer  → docs/software_design/<project>.md
-4. /cubemx-framework-guide      → docs/CubeMX_build/<project>.md → user generates in CubeMX → review
+1. /requirements-doc-filling    → docs/releases/<version>/requirements.md
+2. /hardware-interface-writer   → docs/releases/<version>/hardware.json
+3. /software-design-doc-writer  → docs/releases/<version>/software_design.md
+4. /cubemx-framework-guide      → docs/releases/<version>/cubemx_build.md → user generates in CubeMX → review
 5. /cubemx-code-implementation  → app/ + Module/ code on CubeMX skeleton
 6. /embedded-gdb-openocd-debug  → on-target debug session
 ```
+
+## Project Document Layout
+
+This plugin assumes a single repository serves one MCU project. Project deliverables are versioned as release snapshots:
+
+```
+docs/
+├── releases/
+│   ├── v0.1/
+│   │   ├── requirements.md
+│   │   ├── hardware.json
+│   │   ├── software_design.md
+│   │   ├── cubemx_build.md
+│   │   └── notes.md
+│   └── v1.0/
+│       ├── requirements.md
+│       ├── hardware.json
+│       ├── software_design.md
+│       ├── cubemx_build.md
+│       └── notes.md
+├── modules/
+│   └── <module-name>/
+│       ├── manual.md
+│       └── source files such as PDFs or images
+└── mcu/
+    └── pin-definition source files and converted markdown
+```
+
+When no version is specified, skills use the newest semantic version under `docs/releases`; if none exists, they create `docs/releases/v0.1`.
 
 ## Installation
 

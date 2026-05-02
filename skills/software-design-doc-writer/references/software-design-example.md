@@ -513,9 +513,11 @@ Project
 │  ├─ config.h
 │  ├─ crc.c
 │  └─ utils.c
-└─ Docs
-   ├─ requirement.md
-   └─ software_design.md
+└─ docs
+   └─ releases
+      └─ v0.1
+         ├─ requirements.md
+         └─ software_design.md
 ```
 
 代码目录组织体现如下要求：

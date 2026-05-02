@@ -1,11 +1,26 @@
 ---
 name: software-design-doc-writer
-description: Generate and revise an embedded software design document from the requirements skill definition, a requirement document, and a hardware connection file. Use when Codex needs to produce a first-pass software design document automatically under docs/software_design, refine an existing design draft with the user, or detect that current hardware connections cannot realize required software behavior and hand the issue back to the hardware-interface-writer skill after user approval.
+description: Generate and revise an embedded software design document from the requirements skill definition, docs/releases/VERSION/requirements.md, and docs/releases/VERSION/hardware.json. Use when Codex needs to produce a first-pass software design document automatically as docs/releases/VERSION/software_design.md, refine an existing design draft with the user, or detect that current hardware connections cannot realize required software behavior and hand the issue back to the hardware-interface-writer skill after user approval.
 ---
 
 # Software Design Doc Writer
 
 Use this skill to turn an existing requirement document and hardware connection file into a structured software design document.
+
+## Release Document Layout
+
+Use the single-project release layout:
+
+```text
+docs/releases/<version>/
+  requirements.md
+  hardware.json
+  software_design.md
+  cubemx_build.md
+  notes.md
+```
+
+If the user names a release version, use that version exactly after sanitizing it to a directory-safe name such as `v1.0`. If the user does not name a version, use the newest semantic version under `docs/releases`. If no release exists, report that `requirements.md` and `hardware.json` are missing instead of creating an empty design basis.
 
 Read the sibling `../requirements-doc-filling/SKILL.md` file in this plugin before drafting so the software design stays aligned with the requirement-document collection logic and section semantics established by the requirements skill.
 
@@ -15,8 +30,8 @@ Read `references/software-design-example.md` only to constrain document format, 
 
 ## Required Inputs
 
-- Requirement document: prefer a completed file under `docs/Requirements`. Confirm the exact file when multiple candidates exist.
-- Hardware connection file: prefer a JSON file under `docs/Hardware` produced by the `hardware-interface-writer` skill in this plugin.
+- Requirement document: prefer the active release file `docs/releases/<version>/requirements.md`. Confirm the release when multiple candidates exist and the newest semantic version is not clearly intended.
+- Hardware connection file: prefer the active release file `docs/releases/<version>/hardware.json` produced by the `hardware-interface-writer` skill in this plugin.
 
 If either file is missing, ask the user to provide or identify it before drafting.
 
@@ -32,7 +47,7 @@ If either file is missing, ask the user to provide or identify it before draftin
 5. If the current hardware connections cannot support one or more required software functions, stop drafting the final design document, explain the mismatch concretely, and ask the user whether to revise hardware by using the `hardware-interface-writer` skill in this plugin.
 6. Only after the user explicitly allows hardware revision, hand the task back to the hardware skill, update the hardware connection file, then resume this skill and regenerate or revise the software design document.
 7. If the hardware is feasible or feasible with documented assumptions, generate the first full design draft automatically with no interactive section-by-section interview.
-8. Save the generated markdown document to `docs/software_design/<project-name>-<YY-MM-DD>.md`.
+8. Save the generated markdown document to `docs/releases/<version>/software_design.md`.
 9. When the user later asks for changes, revise the existing design document instead of restarting from scratch.
 
 ## Automatic First Draft Rules
@@ -112,12 +127,10 @@ Do not modify hardware artifacts without the user's permission.
 
 ## Output Rules
 
-- Save the final markdown to `docs/software_design/<project-name>-<YY-MM-DD>.md`.
-- Create `docs/software_design` if it does not exist.
-- Use the project name from the requirement document title or project section.
-- Format the date as `YY-MM-DD` in the user's local timezone.
-- Sanitize `<project-name>` for Windows file paths while preserving readable Chinese or English names.
-- If the target file already exists, inspect it before overwriting. If the user asked to update that document, revise it in place. If a new draft is needed and overwrite is not confirmed, append a short suffix such as `-v2`.
+- Save the final markdown to `docs/releases/<version>/software_design.md`.
+- Create `docs/releases/<version>` if it does not exist.
+- Use the active release version from the user's request or the Release Document Layout rules above.
+- If the target file already exists, inspect it before overwriting. If the user asked to update that document, revise it in place. If a new draft is needed and overwrite is not confirmed, create or use a new release directory such as `v0.2` instead of adding date or project suffixes to the filename.
 - After saving, report the path used, the requirement document used, the hardware connection file used, and any remaining `TBD` items or assumptions.
 
 ## Recommended Section Mapping

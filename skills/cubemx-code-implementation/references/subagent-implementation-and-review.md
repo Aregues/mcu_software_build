@@ -10,7 +10,7 @@ Tell each implementation subagent to read:
 
 - the requirement sections relevant to that module
 - the software design sections defining that module's interface and timing
-- the relevant `docs/Module/<module-name>` folder, where `<module-name>` matches the assigned module; read the converted merged markdown manual in that folder before PDFs or other original source artifacts
+- the relevant `docs/modules/<module-name>` folder, where `<module-name>` matches the assigned module; read the converted merged markdown manual in that folder before PDFs or other original source artifacts
 - `references/object-oriented-c-module-architecture.md`
 - `references/embedded-development-rules.md`
 - `references/config-parameter-management.md`
@@ -20,7 +20,7 @@ Tell each implementation subagent to read:
 
 Also tell each implementation subagent:
 
-- implement only its assigned module code under `Module/<module-name>` plus explicitly assigned tightly related headers
+- implement only its assigned module code under `Module/<module-name>` plus explicitly assigned tightly related capability headers, preferably under `Common`
 - keep board-resource binding out of `Module`; concrete drivers may accept CubeMX resources through init/config structs, but project object creation and resource binding belongs in the top-level `Board` or `board` directory
 - avoid changing business logic, HMI flow, unrelated framework files, shared startup flow, or unrelated callbacks
 - work with existing CubeMX handles and naming rather than inventing a parallel hardware layer
@@ -49,7 +49,7 @@ Each review must check at least:
 - whether every automated-check hit is judged as acceptable, needs manual review, or requires rewrite
 - whether the module stays within its ownership boundary
 - whether board binding is kept in a dedicated top-level `Board` or `board` directory and not mixed into `app` or concrete driver folders
-- whether core interfaces remain platform-neutral and do not expose HAL, CubeMX, board, or concrete-driver details
+- whether capability interfaces remain platform-neutral and do not expose HAL, CubeMX, board, or concrete-driver details
 - whether interfaces remain narrow and explicit
 - whether application code depends only on abstract interfaces
 - whether project-tunable parameters are centralized and traceable

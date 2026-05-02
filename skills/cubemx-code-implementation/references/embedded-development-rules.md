@@ -1,6 +1,6 @@
 # Embedded Development Rules
 
-Read this file before writing or reviewing implementation code in core interface files, concrete drivers, board binding files, business application code, or CubeMX user-code blocks.
+Read this file before writing or reviewing implementation code in capability interface files, concrete drivers, board binding files, business application code, or CubeMX user-code blocks.
 
 ## Development Style
 
@@ -18,23 +18,28 @@ Use deterministic, bounded, and reviewable embedded code.
 
 ## Layering Rules
 
-- Split module code into core interface, concrete driver, board binding, and business application layers.
-- Keep core interface files focused on stable abstraction: base struct, ops table, status values, capability flags, and public wrapper functions.
-- Keep concrete drivers focused on device-level behavior: init, read, write, parse, command, status, and fault detection.
+- Follow the `Common` / `Module` / `APP` or `app` / `Board` layering model.
+- Keep `Common` focused on stable capability interfaces and platform-neutral shared utilities: base structs, ops tables, status values, capability flags, public wrapper functions, shared status/error definitions, ring buffers, CRC helpers, and similar code.
+- Do not put board pin configuration, CubeMX handles, HAL calls, register access, concrete driver headers, board headers, or business types in `Common`.
+- Keep `Module` focused on reusable hardware capabilities:
+  - `Module/bus` implements bus or MCU peripheral behavior and may depend on HAL/CubeMX.
+  - `Module/device` owns concrete external device protocols, registers, data parsing, commands, status, and fault detection.
+  - `Module/component` combines abstract interfaces into higher-level reusable features.
 - Keep board binding focused on object creation, CubeMX resource injection, concrete-driver initialization, and exposing abstract base pointers to application code.
-- Keep board binding in a dedicated top-level directory such as `Board` or `board`, at the same level as `app` and `Module`.
+- Keep board binding in a dedicated top-level directory such as `Board` or `board`, at the same level as `Common`, `app`, and `Module`.
 - Do not put board binding files inside concrete driver folders, and do not mix them into the business `app` directory.
 - Keep `app` code focused on use-case logic: state machine, control flow, policy, HMI, inter-module coordination, scheduling, and system health.
-- Core interface headers must not depend on HAL, CubeMX-generated headers, board headers, register headers, GPIO/PWM/I2C/SPI/UART/DMA/timer types, or concrete driver headers.
-- Concrete drivers may depend on core interface headers, HAL/CubeMX, BSP-style glue, and local utility headers.
+- Capability interface headers under `Common`, or under the existing project interface location, must not depend on HAL, CubeMX-generated headers, board headers, register headers, GPIO/PWM/I2C/SPI/UART/DMA/timer types, or concrete driver headers.
+- Concrete drivers may depend on capability interface headers, HAL/CubeMX, BSP-style glue, and local utility headers.
 - Board binding may depend on concrete driver headers, CubeMX handles, generated pin names, and hardware-resource declarations.
-- `app` may depend only on core interface headers and project-level abstract services.
+- `app` may depend only on capability interface headers and project-level abstract services.
 - `app` must not include HAL headers, register headers, generated hardware headers, or concrete driver headers.
-- Concrete drivers and core interfaces must not depend on `app` business logic.
+- Concrete drivers and capability interfaces must not depend on `app` business logic.
 - Do not let business rules leak into device drivers.
 - Do not let device register details leak upward into `app` unless the software design explicitly calls for that exposure.
 - If a shared contract is needed between `app` and a device, define a narrow abstract interface and keep ownership clear.
 - Use capability queries or extension interfaces for optional device behavior rather than forcing application code to cast to a concrete type.
+- Separate persistent-object setup from hardware activation when practical: `construct` binds ops/dependencies/resources, while `init` performs hardware communication, register configuration, buffer clearing, or start actions.
 
 ## File and Interface Style
 
@@ -81,9 +86,9 @@ Use deterministic, bounded, and reviewable embedded code.
 - Do not block indefinitely waiting for hardware response.
 - Do not use unbounded queues, unbounded recursion, or uncontrolled retry loops.
 - Do not put application policy into ISR context.
-- Do not let core interface or concrete driver code call into `app` business logic.
+- Do not let capability interface or concrete driver code call into `app` business logic.
 - Do not let `app` include concrete driver headers or cast abstract base pointers to derived concrete types.
-- Do not put HAL, GPIO, PWM, I2C, SPI, UART, DMA, timer, or register details in core interface headers.
+- Do not put HAL, GPIO, PWM, I2C, SPI, UART, DMA, timer, or register details in capability interface headers.
 - Do not expand the base interface for one concrete device's special feature; use capability queries or an explicit extension interface.
 - Do not mix HMI flow and low-level register or protocol operations in the same function.
 - Do not bypass the software design document's layering, timing, or fault assumptions without calling out the mismatch.

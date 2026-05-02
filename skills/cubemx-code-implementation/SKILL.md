@@ -1,24 +1,27 @@
 ---
 name: cubemx-code-implementation
-description: Implement, build, verify, or flash a complete embedded application on top of an STM32CubeMX-generated framework by using the generated requirement document, software design document, CubeMX setup guide, and project skeleton. Use when Codex needs to work in a CubeMX project, including CMake/Ninja projects with `CMakePresets.json`, `cmake/gcc-arm-none-eabi.cmake`, OpenOCD flashing, adding `app`, `Module`, `Board`, and `Config` implementation code without breaking CubeMX-generated directory structure, parallelizing unrelated module-driver work with subagents, and keeping business logic and HMI code in the main agent for user-facing clarification.
+description: Implement, build, verify, or flash a complete embedded application on top of an STM32CubeMX-generated framework by using the generated requirement document, software design document, CubeMX setup guide, and project skeleton. Use when Codex needs to work in a CubeMX project, including CMake/Ninja projects with `CMakePresets.json`, `cmake/gcc-arm-none-eabi.cmake`, OpenOCD flashing, adding `Common`, `app` or `APP`, `Module`, `Board`, and `Config` implementation code without breaking CubeMX-generated directory structure, parallelizing unrelated module-driver work with subagents, and keeping business logic and HMI code in the main agent for user-facing clarification.
 ---
 
 # CubeMX Code Implementation
 
 Use this skill to turn project documents plus an STM32CubeMX-generated project skeleton into working embedded code.
 
-Read project documents directly from `docs`:
+Read project documents directly from the active release under `docs/releases/<version>`:
 
-- requirement documents under `docs/Requirements`
-- software design documents under `docs/software_design`
-- CubeMX setup guides or framework review notes under `docs/CubeMX_build`
-- module manuals under `docs/Module`
+- requirement document at `docs/releases/<version>/requirements.md`
+- software design document at `docs/releases/<version>/software_design.md`
+- CubeMX setup guide or framework review notes at `docs/releases/<version>/cubemx_build.md`
+- optional implementation notes at `docs/releases/<version>/notes.md`
+- shared module manuals under `docs/modules`
 
 Treat these `docs` artifacts as the implementation basis. Do not depend on re-reading upstream skill definitions when the needed project information is already present in `docs`.
 
+If the user names a release version, use that version exactly after sanitizing it to a directory-safe name such as `v1.0`. If the user does not name a version, use the newest semantic version under `docs/releases`. If no release exists, report that the required release documents are missing instead of guessing project inputs.
+
 ## Module Manual Lookup Rules
 
-When implementing or reviewing a module driver, locate its manual under `docs/Module/<module-name>`, where `<module-name>` should match the module being implemented as closely as the repository naming allows.
+When implementing or reviewing a module driver, locate its manual under `docs/modules/<module-name>`, where `<module-name>` should match the module being implemented as closely as the repository naming allows.
 
 Inside the module-named folder, prefer markdown files first. The markdown manual is a converted and merged version of the module's source manual files, so read it before PDFs, images, or other original source artifacts. If multiple markdown files exist, start with the broadest manual-style file such as `manual.md`, `README.md`, or the file whose name matches the module folder, then read narrower markdown supplements only when needed.
 
@@ -28,7 +31,7 @@ Use PDFs or other original artifacts only when the relevant detail is missing, a
 
 Load these references only when their condition applies:
 
-- `references/embedded-development-rules.md`: read before writing or reviewing core interface files, concrete drivers, board binding files, business application code, or CubeMX user-code blocks.
+- `references/embedded-development-rules.md`: read before writing or reviewing capability interface files, concrete drivers, board binding files, business application code, or CubeMX user-code blocks.
 - `references/config-parameter-management.md`: read when adding, injecting, centralizing, or reviewing timeouts, thresholds, retry counts, calibration values, queue depths, stack sizes, task periods, or feature switches.
 - `references/peripheral-callback-rules.md`: read when using interrupts, HAL callbacks, DMA, polling loops, shared buffers, or ISR-to-main/task handoff.
 - `references/freertos-development-rules.md`: read when the CubeMX project includes FreeRTOS middleware or RTOS-generated source files.
@@ -42,9 +45,9 @@ When dispatching a subagent, explicitly name the reference files it must read. D
 
 ## Required Inputs
 
-- One requirement document under `docs/Requirements`
-- One software design document under `docs/software_design`
-- Optionally one CubeMX guide or framework review note under `docs/CubeMX_build`
+- One requirement document at `docs/releases/<version>/requirements.md`
+- One software design document at `docs/releases/<version>/software_design.md`
+- Optionally one CubeMX guide or framework review note at `docs/releases/<version>/cubemx_build.md`
 - One generated STM32CubeMX project tree containing at least:
   - `*.ioc`
   - `Core`
@@ -56,9 +59,11 @@ If multiple candidate projects exist, match by shared project stem first and the
 
 Generate the full project code required by the requirement document and software design document on top of the existing CubeMX framework.
 
-Implement under the CubeMX project rather than as a standalone rewrite. Keep the CubeMX-generated directory structure intact and add implementation code through the top-level `app`, `Module`, `Board` or `board`, and `Config` or `config` folders as needed.
+Implement under the CubeMX project rather than as a standalone rewrite. Keep the CubeMX-generated directory structure intact and add implementation code through the top-level `Common`, `app` or `APP`, `Module`, `Board` or `board`, and `Config` or `config` folders as needed.
 
 When designing or implementing a module, use object-oriented C design unless the existing project already has a stronger local convention. The CubeMX-generated project remains the base framework; object boundaries are added on top of it and must not require reorganizing CubeMX output.
+
+The main architecture rule is: upper layers depend on capability interfaces, not on a specific hardware implementation. For example, an MPU6050 driver depends on an I2C register-access interface, not directly on `hi2c1`, `GPIOB`, `HAL_I2C_Mem_Read`, or an `i2c_hal` concrete driver.
 
 ## Reading Strategy
 
@@ -68,7 +73,7 @@ Read artifacts in this order:
 2. Software design document: extract software layers, module boundaries, runtime flow, task periods, interrupts, interfaces, data ownership, and fault handling.
 3. CubeMX guide or generated framework review notes: extract intended peripherals, pin assignments, timers, DMA, communication buses, and known framework gaps.
 4. Generated project tree: inspect `*.ioc`, `Core/Inc`, `Core/Src`, `Drivers`, middleware folders, and build files to determine actual integration points.
-5. `docs/Module`: read only the module-named folders relevant to modules being implemented, following the Module Manual Lookup Rules and preferring the converted merged markdown manual before PDFs or original source artifacts.
+5. `docs/modules`: read only the module-named folders relevant to modules being implemented, following the Module Manual Lookup Rules and preferring the converted merged markdown manual before PDFs or original source artifacts.
 6. Load the reference files listed above according to the project features and implementation work.
 
 ## CubeMX Integration Rules
@@ -76,6 +81,7 @@ Read artifacts in this order:
 - Treat CubeMX output as the base framework.
 - Do not move, delete, or reorganize CubeMX-generated folders such as `Core`, `Drivers`, startup files, linker scripts, or project files.
 - Prefer adding:
+  - `Common` for cross-module capability interfaces, shared status values, and platform-neutral utilities
   - `app` for business logic, state machines, HMI flow, orchestration, and project-level services
   - `Module` for reusable external-device drivers or hardware abstractions
   - `Board` or `board` for object creation, CubeMX resource binding, concrete-driver initialization, and abstract accessors
@@ -95,34 +101,65 @@ Read artifacts in this order:
   - design/document gap
   - implementation gap
 
-## Layer Ownership
+## Program Architecture Constraints
 
-- `Module` owns abstract device interfaces and concrete device implementations: init, read, write, parse, command, status, and fault detection.
-- `app` owns use-case behavior: state machine, control flow, policy, HMI, inter-module coordination, scheduling, and system-level health decisions.
-- board binding code owns object creation, hardware-resource injection, concrete-driver initialization, and handing abstract base pointers to `app`.
-- keep board binding in a dedicated top-level directory such as `Board` or `board`, at the same level as `app` and `Module`; do not place board binding inside concrete driver folders and do not mix it into the business `app` directory.
+Use the `Common` / `Module` / `APP` or `app` / `Board` layering model. The goal is not to create extra folders for their own sake; it is to keep changes localized when pins, bus implementations, device models, boards, or business policies change.
+
+- `Common` owns capability interfaces and platform-neutral shared code: `status.h`, `error.h`, `i2c_if.h`, `spi_if.h`, `uart_if.h`, `display_if.h`, `led_if.h`, ring buffers, CRC helpers, and similar utilities.
+- `Common` must not contain current-board pin configuration, CubeMX handles such as `hi2c1` or `huart1`, HAL calls, register access, concrete driver headers, board headers, or `app` business types.
+- `Module` owns hardware capabilities and reusable modules:
+  - `Module/bus` implements bus or MCU peripheral behavior such as HAL I2C, GPIO I2C, SPI, UART, PWM, ADC, or timers; it may depend on HAL/CubeMX because it is the concrete platform adapter.
+  - `Module/device` owns a concrete external device or chip protocol such as MPU6050, SSD1306, or W25Q64; it may know registers and data formats, but must not know product business states or which concrete bus implementation is used.
+  - `Module/component` combines abstract interfaces into a higher-level reusable feature such as display, status LED, button manager, storage, or sensor fusion; it should prefer `Common/*_if.h` interfaces over concrete device headers.
+- `APP` or `app` owns product behavior: state machines, events, control policy, HMI flow, inter-module coordination, scheduling, and system-level health decisions.
+- `APP` or `app` must not own low-level operations such as GPIO toggling, I2C/SPI/UART register transfers, OLED controller command details, sensor register parsing, CubeMX handle selection, or board pin mapping.
+- `Board` or `board` is the only layer that knows which device is wired to which pins, bus handles, DMA channels, timer channels, addresses, chip-select lines, and concrete implementations.
+- `Board` or `board` creates concrete objects, injects CubeMX resources, selects implementations such as hardware I2C versus GPIO-simulated I2C, calls concrete init functions, and exposes only abstract capability pointers or narrow board-level services upward.
+- Keep board binding in a dedicated top-level directory such as `Board` or `board`, at the same level as `Common`, `app`, and `Module`; do not place board binding inside concrete driver folders and do not mix it into the business `app` directory.
 - Preserve dependency direction:
-  - CubeMX/HAL generated layer -> hardware access foundation
-  - core interface headers -> stable abstraction only, no HAL, no concrete driver, no chip-platform dependency
-  - concrete module drivers -> core interface headers plus HAL/CubeMX or low-level hardware libraries
-  - board binding layer -> concrete driver headers plus CubeMX handles and pin/bus/timer resources
-  - `app` -> core interface headers and project-level abstract services only
-- `app` must not include HAL headers, register headers, GPIO/PWM/I2C/SPI concrete-driver headers, or concrete derived-type definitions.
-- `Module` must not depend on `app` business logic. If project configuration must flow into a driver, prefer a top-level `Config/project_config.h` pattern plus config structs, init arguments, or explicit narrow mapping in board binding as described in `references/config-parameter-management.md`.
+  - CubeMX/HAL generated layer provides the hardware access foundation.
+  - `Common/*_if.h` defines stable capability interfaces only.
+  - `Module/device` and `Module/component` use `Common/*_if.h` interfaces instead of concrete hardware implementations.
+  - `Module/bus` and concrete drivers implement capability interfaces using HAL/CubeMX or low-level hardware libraries.
+  - `Board` or `board` binds concrete implementations and CubeMX resources, then hands abstract pointers to `app`.
+  - `APP` or `app` uses abstract interfaces and project-level services only.
+- If the existing project already has a capability-interface directory inside `Module`, keep the local convention, but enforce the same boundary as `Common`: no HAL, CubeMX, board, GPIO, PWM, I2C, SPI, UART, DMA, timer, register, concrete-driver, or business dependency leaks.
+- Do not let business rules leak into device drivers, and do not let device register details leak upward into `app` unless the software design explicitly requires that exposure.
+- If project configuration must flow into a driver, prefer a top-level `Config/project_config.h` pattern plus config structs, init arguments, or explicit narrow mapping in board binding as described in `references/config-parameter-management.md`.
+- Separate `construct` from `init` when the module owns persistent objects: `construct` binds function pointers and dependency references; `init` performs hardware communication, register configuration, buffer clearing, sampling start, display start, or other actions that may need retry or deinit/reinit.
+
+Typical dependency chain:
+
+```text
+APP/app
+  -> Module/component or Module/device through abstract APIs
+  -> Common/*_if.h capability interfaces
+  <- Module/bus or concrete device implementations
+  <- Board selects concrete implementations and injects CubeMX resources
+```
+
+These are automatic violations unless the design explicitly names a controlled exception:
+
+```text
+HAL headers, generated hardware headers, GPIO ports/pins, timer handles,
+DMA handles, hi2c/huart/hspi/htim handles, concrete driver headers,
+SSD1306 page-address commands, MPU6050 register-transfer details, or
+HAL_GPIO_WritePin/HAL_I2C_Mem_Read calls in APP/app code.
+```
 
 ## Object-Oriented C Module Architecture
 
 Read `references/object-oriented-c-module-architecture.md` for the full pattern, examples, and review checklist when practical. If that reference is not loaded, still follow these minimum rules:
 
-- split each module into a core interface layer, concrete driver layer, board binding layer, and business application layer
-- put stable abstract APIs in `xxx.h` / `xxx.c`: base struct, ops table, status enum, capability flags when needed, and wrapper functions
+- split each module into a capability interface layer, concrete driver layer, board binding layer, and business application layer
+- put stable abstract APIs in `Common/*_if.h` or the project's established capability-interface location: base struct, ops table, status enum, capability flags when needed, and wrapper functions
 - put hardware-specific derived types in files such as `xxx_gpio.h/.c`, `xxx_pwm.h/.c`, or `xxx_i2c.h/.c`
 - put the base struct as the first member of every derived struct, bind a `static const xxx_ops_t` table during init, and call behavior through wrapper functions
 - keep `app` code on abstract pointers such as `xxx_base_t *`; do not cast to concrete types or branch on concrete driver kind
 - let files under `Board` or `board` create concrete objects, inject CubeMX resources, call concrete init functions, and pass only abstract base pointers to `app`
-- keep core interface headers free of HAL, register, CubeMX, board, GPIO, PWM, I2C, SPI, UART, DMA, timer, and concrete-driver dependencies
+- keep capability interface headers free of HAL, register, CubeMX, board, GPIO, PWM, I2C, SPI, UART, DMA, timer, and concrete-driver dependencies
 - use capability queries or extension interfaces for optional behavior instead of expanding the base interface for one device variant
-- when asked for module architecture output, include recommended file structure, file responsibilities, include relationships, core struct design, init and board-binding flow, business call example, dependency explanation, and common wrong patterns
+- when asked for module architecture output, include recommended file structure, file responsibilities, include relationships, capability struct design, init and board-binding flow, business call example, dependency explanation, and common wrong patterns
 
 ## Implementation Workflow
 
@@ -135,7 +172,7 @@ Read `references/object-oriented-c-module-architecture.md` for the full pattern,
    - project configuration
    - application services
    - business logic and HMI flow
-5. Create `app`, `Module`, `Board` or `board`, and `Config` or `config` folders as required by the implementation if they do not already exist.
+5. Create `Common`, `app` or `APP`, `Module`, `Board` or `board`, and `Config` or `config` folders as required by the implementation if they do not already exist.
 6. For unrelated external-module drivers, prepare parallel subagent tasks with explicit ownership and required reference files.
 7. Implement unrelated external-module drivers under `Module`.
 8. Review subagent work before integration; require rewrite for confirmed violations rather than silently adapting broken code.
@@ -173,7 +210,7 @@ Read `references/subagent-implementation-and-review.md` before dispatching imple
 
 ## Subagent Review Requirements
 
-Read `references/subagent-implementation-and-review.md` before reviewing subagent output. At minimum, run automated checks when practical, explicitly judge every hit, verify ownership boundaries, confirm board binding is in a dedicated top-level `Board` or `board` directory, confirm core interfaces are platform-neutral, and require rewrite for confirmed violations before integration.
+Read `references/subagent-implementation-and-review.md` before reviewing subagent output. At minimum, run automated checks when practical, explicitly judge every hit, verify ownership boundaries, confirm board binding is in a dedicated top-level `Board` or `board` directory, confirm capability interfaces are platform-neutral, and require rewrite for confirmed violations before integration.
 
 ## Main-Agent Responsibilities
 
@@ -196,7 +233,7 @@ Before claiming completion, verify as many of these as practical:
 
 - every major requirement is mapped to code ownership
 - every required external module has a concrete implementation or explicit blocker
-- `app`, `Module`, `Board` or `board`, and `Config` or `config` integration points are connected to the CubeMX framework
+- `Common`, `app` or `APP`, `Module`, `Board` or `board`, and `Config` or `config` integration points are connected to the CubeMX framework
 - edited generated files still preserve CubeMX structure and user sections
 - automated review checks have been run for completed implementation or subagent output when practical, and all hits are explained or corrected
 - major tunable parameters are centralized and traceable
@@ -210,18 +247,18 @@ When the project uses an STM32CubeIDE `.cproject` and new source folders or modu
 
 1. Update the CubeIDE project metadata before building:
    - add each new public include directory to every relevant C compiler include path group in `.cproject`
-   - include core interface directories such as `Module/<module-name>`, concrete driver directories when their headers are used by board binding, dedicated board binding directories such as `Board`, project configuration directories such as `Config`, and `app` directories that expose business application headers
-   - add new source roots such as `app`, `Board`, `Module`, or specific module subfolders to each relevant `<sourceEntries>` group; add `Config` include paths when it contains headers
+   - include capability interface directories such as `Common` or `Module/<module-name>`, concrete driver directories when their headers are used by board binding, dedicated board binding directories such as `Board`, project configuration directories such as `Config`, and `app` directories that expose business application headers
+   - add new source roots such as `Common`, `app`, `Board`, `Module`, or specific module subfolders to each relevant `<sourceEntries>` group; add `Config` include paths when it contains headers
    - preserve existing CubeMX-generated source roots such as `Core` and `Drivers`
    - do not edit `.cproject` for unrelated toolchain or optimization churn
 2. Run an ARM GCC syntax-only check when `arm-none-eabi-gcc` is available:
-   - include `Core/Inc`, core interface headers, concrete driver headers needed by board binding, `Board` headers, `Config` headers, `app` headers, HAL driver headers, CMSIS device headers, and CMSIS core headers
+   - include `Core/Inc`, capability interface headers, concrete driver headers needed by board binding, `Board` headers, `Config` headers, `app` headers, HAL driver headers, CMSIS device headers, and CMSIS core headers
    - use the MCU flags from the CubeMX project, for example Cortex-M4 Thumb hard-float flags for STM32F407
    - define required CubeMX/HAL symbols such as `USE_HAL_DRIVER` and the exact device macro such as `STM32F407xx`
-   - compile implementation-owned C files with `-fsyntax-only` first, grouped as core interface wrappers, concrete drivers, board binding, and business application files
-   - syntax-check core interface files with only platform-neutral include paths when practical, to catch accidental HAL, CubeMX, board, or concrete-driver dependency leaks
+   - compile implementation-owned C files with `-fsyntax-only` first, grouped as capability interface wrappers, concrete drivers, board binding, and business application files
+   - syntax-check capability interface files with only platform-neutral include paths when practical, to catch accidental HAL, CubeMX, board, or concrete-driver dependency leaks
 3. Run a full compile check when practical:
-   - compile core interface wrappers, concrete drivers, board binding, business application files, `Core/Src`, and the required `Drivers/STM32F4xx_HAL_Driver/Src` C files into temporary object files under a local build-verification directory such as `build_verify`
+   - compile capability interface wrappers, concrete drivers, board binding, business application files, `Core/Src`, and the required `Drivers/STM32F4xx_HAL_Driver/Src` C files into temporary object files under a local build-verification directory such as `build_verify`
    - compile the CubeMX startup assembly file, for example `Core/Startup/startup_<device>.s`, with `-x assembler-with-cpp`
    - keep temporary build artifacts inside the CubeMX project or another explicitly named build output directory, not inside generated source folders
 4. Run a link check when practical:
@@ -234,7 +271,7 @@ When the project uses an STM32CubeIDE `.cproject` and new source folders or modu
    - link success means the project is at least compileable and linkable with the available ARM GCC toolchain and linker script
    - warnings from vendor HAL/CMSIS files should be named separately from warnings introduced by implementation code
    - include-path or type errors in `app` often indicate business-layer dependency on concrete drivers or hardware headers; correct the architecture rather than hiding the issue with broader includes
-   - include-path or type errors in core interface files often indicate leaked HAL/CubeMX/concrete-driver dependency; move those details into concrete drivers or board binding
+   - include-path or type errors in capability interface files often indicate leaked HAL/CubeMX/concrete-driver dependency; move those details into concrete drivers or board binding
    - if STM32CubeIDE headless build is unavailable but ARM GCC manual compile/link succeeds, report it as a manual GCC verification rather than a CubeIDE managed-build result
    - if `arm-none-eabi-gcc` or the linker script is unavailable, say so explicitly and report the remaining build risk
 
@@ -257,7 +294,7 @@ Use that reference for:
 
 Summarize:
 
-- new or changed core interface files, concrete driver files, board binding files, project configuration files, and business application files
+- new or changed capability interface files, concrete driver files, board binding files, project configuration files, and business application files
 - which abstract interfaces were exposed to `app` and which concrete drivers were bound behind them
 - generated files touched and why
 - which tasks were delegated to subagents

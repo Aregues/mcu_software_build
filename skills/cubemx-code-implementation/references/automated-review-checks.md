@@ -12,24 +12,25 @@ If a hit confirms a violation, require rewrite before integrating the code.
 
 ## Scope
 
-Run checks first on implementation-owned paths:
+Run checks first on implementation-owned paths that exist in the project:
 
-- `app`
+- `Common`
+- `app` or `APP`
 - `Module`
 
 Treat these as logical layers inside those paths:
 
-- core interface files, usually `Module/<name>/<name>.h` and `Module/<name>/<name>.c`
+- capability interface files, usually `Common/*_if.h`, `Common/*_if.c`, or an established project-local equivalent
 - concrete driver files, such as `Module/<name>/<name>_gpio.*`, `Module/<name>/<name>_pwm.*`, or `Module/<name>/<name>_i2c.*`
 - board binding files under a dedicated top-level directory such as `Board` or `board`
-- business application files under `app`
+- business application files under `app` or `APP`
 
 When integration code was changed, also include CubeMX user-code integration points:
 
 - `Core/Src`
 - `Core/Inc`
 
-Prefer `rg` for text checks. On Windows, use PowerShell snippets only where line counting or structure-aware review is needed.
+Prefer `rg` for text checks. On Windows, use PowerShell snippets only where line counting or structure-aware review is needed. In the commands below, omit directories that do not exist and use `APP` instead of `app` when that is the project's application directory.
 
 ## Dynamic Memory
 
@@ -38,7 +39,7 @@ Dynamic allocation is forbidden unless the software design document explicitly a
 Use:
 
 ```powershell
-rg -n "\b(malloc|calloc|realloc|free)\s*\(" app Module Core/Src Core/Inc
+rg -n "\b(malloc|calloc|realloc|free)\s*\(" Common app Module Core/Src Core/Inc
 ```
 
 Default judgment:
@@ -54,7 +55,7 @@ Check for infinite loops that may lack timeout, blocking wait, task yield, or sa
 Use:
 
 ```powershell
-rg -n "while\s*\(\s*(1|true)\s*\)|for\s*\(\s*;\s*;\s*\)" app Module Core/Src Core/Inc
+rg -n "while\s*\(\s*(1|true)\s*\)|for\s*\(\s*;\s*;\s*\)" Common app Module Core/Src Core/Inc
 ```
 
 Default judgment:
@@ -65,12 +66,12 @@ Default judgment:
 
 ## Module-to-App Dependency Violation
 
-Core interface files and concrete drivers must not depend on `app` business headers. Board binding is the preferred place to map app-level configuration into concrete init arguments.
+Capability interface files and concrete drivers must not depend on `app` business headers. Board binding is the preferred place to map app-level configuration into concrete init arguments.
 
 Use:
 
 ```powershell
-rg -n "#\s*include\s*[<\"].*app[/\\]" Module
+rg -n "#\s*include\s*[<\"].*app[/\\]" Common Module
 ```
 
 Default judgment:
@@ -80,7 +81,7 @@ Default judgment:
 
 ## Business-Layer Hardware Dependency Violation
 
-Business application code must depend on abstract interfaces, not HAL, CubeMX hardware headers, generated peripheral headers, or concrete driver headers.
+Business application code under `app` or `APP` must depend on abstract interfaces, not HAL, CubeMX hardware headers, generated peripheral headers, or concrete driver headers.
 
 Use:
 
@@ -94,21 +95,21 @@ Default judgment:
 - hit in business logic files is a violation requiring rewrite
 - hit in `app/board.*` or `app/*board*.*` usually indicates board binding was mixed into the business layer; move it to a dedicated `Board` or `board` directory unless the existing project has an explicit, documented exception
 
-## Core Interface Hardware Pollution
+## Capability Interface Hardware Pollution
 
-Core interface headers must stay platform-neutral and must not expose HAL, CubeMX, register, board, or concrete-driver details.
+Capability interface headers must stay platform-neutral and must not expose HAL, CubeMX, register, board, or concrete-driver details.
 
 Use:
 
 ```powershell
-rg -n "#\s*include\s*[<\"].*(stm32.*hal|main\.h|gpio\.h|tim\.h|i2c\.h|spi\.h|usart\.h|adc\.h|dma\.h|_gpio\.h|_pwm\.h|_i2c\.h|_spi\.h|_uart\.h)" Module
-rg -n "\b(GPIO_TypeDef|GPIO_PinState|I2C_HandleTypeDef|SPI_HandleTypeDef|UART_HandleTypeDef|TIM_HandleTypeDef|DMA_HandleTypeDef|ADC_HandleTypeDef)\b" Module
+rg -n "#\s*include\s*[<\"].*(stm32.*hal|main\.h|gpio\.h|tim\.h|i2c\.h|spi\.h|usart\.h|adc\.h|dma\.h|_gpio\.h|_pwm\.h|_i2c\.h|_spi\.h|_uart\.h)" Common Module
+rg -n "\b(GPIO_TypeDef|GPIO_PinState|I2C_HandleTypeDef|SPI_HandleTypeDef|UART_HandleTypeDef|TIM_HandleTypeDef|DMA_HandleTypeDef|ADC_HandleTypeDef)\b" Common Module
 ```
 
 Default judgment:
 
 - hit in concrete driver files such as `*_gpio.h`, `*_pwm.h`, or `*_i2c.h` can be acceptable
-- hit in a core interface file such as `xxx.h` or `xxx.c` is a violation requiring rewrite
+- hit in a capability interface file such as `Common/*_if.h`, `Common/*_if.c`, `xxx.h`, or `xxx.c` is a violation requiring rewrite
 - if file naming does not clearly separate core and concrete files, manually classify the file before judging
 
 ## Abstract-to-Concrete Cast Review

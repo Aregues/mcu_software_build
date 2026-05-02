@@ -1,30 +1,45 @@
 ---
 name: hardware-interface-writer
-description: Guide MCU hardware interface feasibility analysis and hardware connection file writing. Use when Codex needs to confirm a requirement document, collect an MCU pin definition table or pinout diagram, collect module manuals organized under docs/Module/module-name folders with PDFs and images, convert module manuals and MCU pin-definition PDFs to Markdown, extract image-confirmed exposed module pins, analyze module and MCU peripheral sufficiency, and write a hardware_interface-style connection JSON when the design is feasible.
+description: Guide MCU hardware interface feasibility analysis and hardware connection file writing. Use when Codex needs to confirm a release requirements document, collect an MCU pin definition table or pinout diagram, collect module manuals organized under docs/modules/module-name folders with PDFs and images, convert module manuals and MCU pin-definition PDFs to Markdown, extract image-confirmed exposed module pins, analyze module and MCU peripheral sufficiency, and write docs/releases/VERSION/hardware.json when the design is feasible.
 ---
 
 # Hardware Interface Writer
 
 Use this skill to turn a requirement document, MCU pin information, and module manuals into a feasibility decision and a hardware connection file.
 
+## Release Document Layout
+
+Use the single-project release layout:
+
+```text
+docs/releases/<version>/
+  requirements.md
+  hardware.json
+  software_design.md
+  cubemx_build.md
+  notes.md
+```
+
+If the user names a release version, use that version exactly after sanitizing it to a directory-safe name such as `v1.0`. If the user does not name a version, use the newest semantic version under `docs/releases`. If no release exists, create `docs/releases/v0.1`.
+
 ## Required Inputs
 
-- Requirement document: confirm the exact file first. If the user has not identified one, ask them to upload or choose it before analysis.
+- Requirement document: confirm the active release first and use `docs/releases/<version>/requirements.md`. If the user has not identified a release and multiple releases exist, choose the newest semantic version unless the user asks for another one.
 - MCU pin definition table: always request it. Treat this as required for final pin allocation.
-- MCU pin definition PDF (when the pin definition table or pinout is provided as PDF): collect it and convert it to Markdown before feasibility analysis. Recommended location is `docs\MCU\`.
+- MCU pin definition PDF (when the pin definition table or pinout is provided as PDF): collect it and convert it to Markdown before feasibility analysis. Recommended location is `docs\mcu\`.
 - MCU pinout diagram: request it when the pin table does not include multiplexing, package pins, power pins, or alternate functions clearly enough.
-- Module manuals: request module folders under `docs\Module\<模块名>` for modules that implement required functions. Each module folder may contain PDFs and images. Do not require manuals for basic parts such as buttons, LEDs, simple resistors, or generic pull-ups unless the user asks for them.
+- Module manuals: request module folders under `docs\modules\<module-name>` for modules that implement required functions. Each module folder may contain PDFs and images. Do not require manuals for basic parts such as buttons, LEDs, simple resistors, or generic pull-ups unless the user asks for them.
 
 ## Workflow
 
 1. Confirm the requirement document and extract the required hardware-facing functions: sensors, communication links, displays, actuators, buttons, debug interfaces, power rails, voltage constraints, and quantity requirements.
 2. Ask for the MCU pin definition table if it is missing. If the requirement-to-pin analysis depends on unavailable pin information, stop and request it instead of guessing.
-3. Ask for module manuals for non-basic modules needed by the requirement. Prefer `docs\Module\<模块名>\` folders containing all related PDFs and images. Keep a short intake table with module name, required function, provided files, and status. Legacy flat folders `docs\Module\pdf`, `docs\Module\image`, and `docs\Module\markdown` may exist, but prefer the module-folder layout when both are present.
+3. Ask for module manuals for non-basic modules needed by the requirement. Prefer `docs\modules\<module-name>\` folders containing all related PDFs and images. Keep a short intake table with module name, required function, provided files, and status. Legacy flat folders such as `docs\modules\pdf`, `docs\modules\image`, and `docs\modules\markdown` may exist, but prefer the module-folder layout when both are present.
 4. Perform a shallow sufficiency check before conversion:
    - Mark a module `likely sufficient` only if its name or visible metadata clearly matches the required function.
    - Mark it `unclear` when the interface, voltage, range, channel count, or protocol cannot be confirmed yet.
    - Mark it `insufficient` when the visible information already conflicts with the requirement.
-5. Convert PDFs to Markdown with the bundled script, including both module manuals and MCU pin-definition PDFs. Do not call or depend on any external PDF-conversion skill. In the preferred module layout, the script writes `docs\Module\<模块名>\manual.md`, textifies PDFs first, and appends image-review placeholders.
+5. Convert PDFs to Markdown with the bundled script, including both module manuals and MCU pin-definition PDFs. Do not call or depend on any external PDF-conversion skill. In the preferred module layout, the script writes `docs\modules\<module-name>\manual.md`, textifies PDFs first, and appends image-review placeholders.
 
    The script requires `PyMuPDF`. Install it once before first use:
 
@@ -33,25 +48,25 @@ Use this skill to turn a requirement document, MCU pin information, and module m
    ```
 
 ```powershell
-python "<skill_dir>\scripts\pdf_to_md.py" --modules-dir ".\docs\Module"
+python "<skill_dir>\scripts\pdf_to_md.py" --modules-dir ".\docs\modules"
 ```
 
-Also convert MCU pin-definition PDFs to Markdown before pin allocation analysis (example output folder under `docs\MCU\markdown`):
+Also convert MCU pin-definition PDFs to Markdown before pin allocation analysis (example output folder under `docs\mcu\markdown`):
 
 ```powershell
-python "<skill_dir>\scripts\pdf_to_md.py" ".\docs\MCU\pin_definition.pdf" --output-dir ".\docs\MCU\markdown"
+python "<skill_dir>\scripts\pdf_to_md.py" ".\docs\mcu\pin_definition.pdf" --output-dir ".\docs\mcu\markdown"
 ```
 
 For a specific module folder:
 
 ```powershell
-python "<skill_dir>\scripts\pdf_to_md.py" ".\docs\Module\INA219"
+python "<skill_dir>\scripts\pdf_to_md.py" ".\docs\modules\INA219"
 ```
 
 For legacy flat PDF folders only:
 
 ```powershell
-python "<skill_dir>\scripts\pdf_to_md.py" --source-dir ".\docs\Module\pdf" --output-dir ".\docs\Module\markdown"
+python "<skill_dir>\scripts\pdf_to_md.py" --source-dir ".\docs\modules\pdf" --output-dir ".\docs\modules\markdown"
 ```
 
 6. Review each image referenced in `manual.md` and fill the image-review placeholder with only image-confirmed hardware facts: exposed module pins, terminal labels, connector direction, voltage labels, jumper/solder-pad settings, and special wiring notes. If a PDF chip manual and a module image disagree, use the image-confirmed module-exposed pins in the connection file. Mark anything unreadable or not visible as `unclear`; do not guess or substitute bare IC pins for module connector pins.
@@ -62,7 +77,7 @@ python "<skill_dir>\scripts\pdf_to_md.py" --source-dir ".\docs\Module\pdf" --out
    - Check whether any pin is double-booked, reserved for boot/debug/oscillator/reset, or unavailable in the package.
    - Check whether voltage levels and power rails are compatible or need level shifting/regulation.
    - Record assumptions instead of silently filling gaps.
-9. If feasible, read `references/hardware_interface_spec.md` and write the hardware connection file in that schema. Use the fixed output path `docs\Hardware\<项目名称>-<YY-MM-DD>.json`, where `<项目名称>` comes from the requirement document or the `project` field and `<YY-MM-DD>` uses the current local date. Create `docs\Hardware` when it does not exist. Inspect any same-name existing file before overwriting it.
+9. If feasible, read `references/hardware_interface_spec.md` and write the hardware connection file in that schema. Use the fixed output path `docs\releases\<version>\hardware.json`. Create `docs\releases\<version>` when it does not exist. Inspect any existing `hardware.json` before overwriting it.
 10. If not feasible, do not write the connection file unless the user explicitly requests a partial draft. Report the blocking issues and the specific data or hardware change needed to proceed.
 
 ## Output Expectations
@@ -85,7 +100,7 @@ Before writing the connection JSON, load `references/hardware_interface_spec.md`
 Use these additional rules:
 
 - Include every referenced device in `devices` before using it in `connections` or `power_connections`.
-- For any device backed by a folder under `docs\Module\<模块名>`, use the exact folder name `<模块名>` as the device name in `devices`, `connections`, and `power_connections`. Do not rename it with extra descriptive suffixes or marketing labels.
+- For any device backed by a folder under `docs\modules\<module-name>`, use the exact folder name `<module-name>` as the device name in `devices`, `connections`, and `power_connections`. Do not rename it with extra descriptive suffixes or marketing labels.
 - Keep signal names globally consistent.
 - Write signal connections separately from power connections.
 - Prefer symmetric signal entries for both sides of a connection.

@@ -1,6 +1,6 @@
 # CubeMX Guide Template
 
-Use this template when writing `docs/CubeMX_build/<project-name>-<YY-MM-DD>.md`.
+Use this template when writing `docs/releases/<version>/cubemx_build.md`.
 
 ## 1. Project Identification
 

@@ -20,10 +20,10 @@ LIST_RE = re.compile(r"^(?:[-*•●◆■]\s*|(?:\d+|[A-Za-z])[.)]\s+|\d+、\s*
 PAGE_NO_RE = re.compile(r"^-?\s*\d+\s*-?$")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_MODULES_DIR = PROJECT_ROOT / "docs" / "Module"
+DEFAULT_MODULES_DIR = PROJECT_ROOT / "docs" / "modules"
 LEGACY_MODULE_DIR_NAMES = {"pdf", "image", "images", "markdown"}
 DEFAULT_SOURCE_DIR = DEFAULT_MODULES_DIR / "pdf"
-DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "docs" / "Module" / "markdown"
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "docs" / "modules" / "markdown"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
 
 
@@ -714,7 +714,7 @@ def main() -> None:
         "--modules-dir",
         type=Path,
         default=DEFAULT_MODULES_DIR,
-        help="Directory containing docs/Module/<module-name> folders.",
+        help="Directory containing docs/modules/<module-name> folders.",
     )
     parser.add_argument(
         "--source-dir",

@@ -1,11 +1,26 @@
 ---
 name: requirements-doc-filling
-description: Guide users to write a project requirements document by using the ask tool section by section, formatting the result against the bundled SRS template, and saving the final markdown file under docs/Requirements. Use when Codex needs to collect project background, scope, functional requirements, non-functional requirements, HMI details, exception handling, or hardware/software constraints interactively.
+description: Guide users to write a project requirements document by using the ask tool section by section, formatting the result against the bundled SRS template, and saving the final markdown file as docs/releases/VERSION/requirements.md. Use when Codex needs to collect project background, scope, functional requirements, non-functional requirements, HMI details, exception handling, or hardware/software constraints interactively.
 ---
 
 # Requirements Doc Filling
 
-Use this skill to collect project requirements interactively, draft a complete markdown requirements document, and save the final document under `docs/Requirements`.
+Use this skill to collect project requirements interactively, draft a complete markdown requirements document, and save the final document as `docs/releases/<version>/requirements.md`.
+
+## Release Document Layout
+
+Use the single-project release layout:
+
+```text
+docs/releases/<version>/
+  requirements.md
+  hardware.json
+  software_design.md
+  cubemx_build.md
+  notes.md
+```
+
+If the user names a release version, use that version exactly after sanitizing it to a directory-safe name such as `v1.0`. If the user does not name a version, use the newest semantic version under `docs/releases`. If no release exists, create `docs/releases/v0.1`.
 
 Read `references/requirements-template.md` before asking questions so the final structure matches the bundled template.
 
@@ -18,7 +33,7 @@ Read `references/requirements-template-example.md` when preparing each question 
 3. Use the `ask` tool to show a concise example excerpt and gather information for that level-2 heading only.
 4. Build the document incrementally, keeping section titles and numbering aligned with the template.
 5. Return a clean markdown draft that the user can review and refine.
-6. Save the final accepted draft to `docs/Requirements/<project-name>-<YY-MM-DD>.md`.
+6. Save the final accepted draft to `docs/releases/<version>/requirements.md`.
 
 ## Asking Strategy
 
@@ -122,10 +137,8 @@ Ask for:
 - After enough information is collected, assemble the full markdown document in one pass.
 - Briefly list any remaining `TBD` items after the draft.
 - If the user asks for refinement, continue from the existing draft instead of restarting the interview.
-- When the user accepts the draft or asks to finalize, save it to `docs/Requirements/<project-name>-<YY-MM-DD>.md`.
-- Use the project name collected in section 1. If it is missing, ask for it before saving.
-- Format the date as two-digit year, month, and day in the user's local timezone, for example `26-04-11`.
-- Sanitize `<project-name>` for file paths: trim whitespace, replace path separators and characters invalid on Windows with `-`, collapse repeated spaces or hyphens, and keep readable Chinese or English project names.
-- Create `docs/Requirements` if it does not exist.
-- If the target file already exists, ask before overwriting. If the user does not want overwrite, append a short suffix such as `-v2`.
+- When the user accepts the draft or asks to finalize, save it to `docs/releases/<version>/requirements.md`.
+- Use the active release version from the user's request or the Release Document Layout rules above.
+- Create `docs/releases/<version>` if it does not exist.
+- If `requirements.md` already exists in the target release, ask before overwriting. If the user does not want overwrite, create or use a new release directory such as `v0.2` instead of adding date or project suffixes to the filename.
 - After saving, report the saved path and list any remaining `TBD` items.

@@ -558,8 +558,10 @@ Project
 │  └─ 板级资源绑定、CubeMX 句柄注入、对象创建
 ├─ Config
 │  └─ 参数、阈值、周期、重试次数、校准默认值
-└─ Docs
-   └─ software_design.md
+└─ docs
+   └─ releases
+      └─ v0.1
+         └─ software_design.md
 ```
 
 代码目录设计应体现：

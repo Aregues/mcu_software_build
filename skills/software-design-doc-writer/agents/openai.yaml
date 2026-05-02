@@ -1,4 +1,4 @@
 interface:
   display_name: "软件设计文档编写"
   short_description: "根据需求文档与硬件连接自动生成并修订软件设计文档内容"
-  default_prompt: "Use $software-design-doc-writer to generate or revise a software design document from the requirement document and hardware connection file."
+  default_prompt: "Use $software-design-doc-writer to generate or revise docs/releases/<version>/software_design.md from requirements.md and hardware.json in the same release."

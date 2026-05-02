@@ -3,9 +3,9 @@
 ## 1. 项目标识
 
 - 项目名称：仿生鱼控制系统
-- 软件设计文档：`docs/software_design/仿生鱼控制系统-26-04-11.md`
-- 硬件连接图：`docs/Hardware/仿生鱼控制系统-26-04-11.json`
-- 需求文档：`docs/Requirements/仿生鱼控制系统-26-04-11.md`
+- 软件设计文档：`docs/releases/v0.1/software_design.md`
+- 硬件连接图：`docs/releases/v0.1/hardware.json`
+- 需求文档：`docs/releases/v0.1/requirements.md`
 - 目标 MCU：STM32F407VET6
 - 目标封装：LQFP100
 
