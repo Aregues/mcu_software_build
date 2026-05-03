@@ -1,4 +1,4 @@
-# mcu-software-build
+# mcu_go
 
 面向 Claude Code 和 Codex 的 MCU 嵌入式软件开发插件，用于支持 STM32 / ARM Cortex-M 项目从需求收集到板上调试的完整开发流程，尤其适合基于 STM32CubeMX 生成工程框架的项目。
 
@@ -99,16 +99,16 @@ docs/
 
 ## 安装
 
-将 `mcu_software_build` 文件夹放入 Claude Code 工作区，或使用以下命令安装：
+将 `mcu_go` 文件夹放入 Claude Code 工作区，或使用以下命令安装：
 
 ```bash
-claude plugin add /path/to/mcu_software_build
+claude plugin add /path/to/mcu_go
 ```
 
 ## 项目结构
 
 ```text
-mcu_software_build/
+mcu_go/
 |-- .codex-plugin/plugin.json            # Codex 插件清单
 |-- .claude-plugin/plugin.json           # Claude 插件清单
 |-- README.md

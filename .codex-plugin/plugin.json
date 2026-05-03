@@ -1,5 +1,5 @@
 {
-  "name": "mcu-software-build",
+  "name": "mcu_go",
   "version": "1.0.0",
   "description": "End-to-end MCU embedded software development plugin for Codex, from requirements and hardware analysis to CubeMX generation, implementation, and GDB/OpenOCD debugging.",
   "author": {
@@ -18,7 +18,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "MCU Software Build",
+    "displayName": "mcu_go",
     "shortDescription": "STM32 firmware workflow from requirements to target debugging.",
     "longDescription": "Provides a complete STM32 and Cortex-M workflow covering requirements capture, hardware interface analysis, software design, CubeMX framework setup, code implementation, and on-target debugging with GDB and OpenOCD.",
     "developerName": "Simon Dev",

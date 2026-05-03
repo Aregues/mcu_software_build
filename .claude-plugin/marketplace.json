@@ -6,7 +6,7 @@
     },
     "plugins": [
         {
-            "name": "mcu-software-build",
+            "name": "mcu_go",
             "source": "./",
             "description": "End-to-end MCU embedded software development plugin — from requirements gathering, hardware interface analysis, software design, CubeMX framework generation, code implementation, to on-target GDB/OpenOCD debugging.",
             "version": "0.2.0",
