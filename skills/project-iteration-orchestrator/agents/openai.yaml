@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Iteration Orchestrator"
+  short_description: "Orchestrate ECR-first MCU project iterations"
+  default_prompt: "Use $project-iteration-orchestrator to plan and control an incremental MCU project iteration under docs/releases/<next-version>, starting with an ECR before changing requirements, hardware, CubeMX, or code."

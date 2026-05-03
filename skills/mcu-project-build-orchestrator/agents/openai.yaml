@@ -1,0 +1,4 @@
+interface:
+  display_name: "MCU Project Build Orchestrator"
+  short_description: "Orchestrate new MCU/CubeMX project builds"
+  default_prompt: "Use $mcu-project-build-orchestrator to run the full new MCU/CubeMX project build workflow under docs/releases/<version>, from requirements through CubeMX setup, implementation, and optional on-target debugging."
