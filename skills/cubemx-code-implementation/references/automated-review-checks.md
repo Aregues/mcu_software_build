@@ -17,6 +17,8 @@ Run checks first on implementation-owned paths that exist in the project:
 - `Common`
 - `app` or `APP`
 - `Module`
+- `Board` or `board`
+- `Config` or `config`
 
 Treat these as logical layers inside those paths:
 
@@ -30,7 +32,48 @@ When integration code was changed, also include CubeMX user-code integration poi
 - `Core/Src`
 - `Core/Inc`
 
-Prefer `rg` for text checks. On Windows, use PowerShell snippets only where line counting or structure-aware review is needed. In the commands below, omit directories that do not exist and use `APP` instead of `app` when that is the project's application directory.
+## Primary Python Check
+
+Prefer the Python checker in this skill before manual review or fallback grep checks.
+
+From the plugin repository root, run:
+
+```powershell
+python skills/cubemx-code-implementation/scripts/check_layer_dependencies.py --root <CubeMX-project-root>
+```
+
+When reviewing changed CubeMX user integration points, add `--include-core`:
+
+```powershell
+python skills/cubemx-code-implementation/scripts/check_layer_dependencies.py --root <CubeMX-project-root> --include-core
+```
+
+Use `--format json` for machine-readable review handoff, `--strict-review` when review findings should fail the check, and `--allow RULE_ID:<glob>` only for explicit, documented exceptions. Relative globs are evaluated from the CubeMX project root, for example:
+
+```powershell
+python skills/cubemx-code-implementation/scripts/check_layer_dependencies.py --root <CubeMX-project-root> --allow SCATTERED_CONFIG:Module/legacy/*
+```
+
+The checker reports:
+
+- `APP_HARDWARE_INCLUDE`
+- `COMMON_HARDWARE_POLLUTION`
+- `CONFIG_HARDWARE_POLLUTION`
+- `CONFIG_APP_DEPENDENCY`
+- `MODULE_TO_APP_DEPENDENCY`
+- `APP_CONCRETE_CAST`
+- `BOARD_BINDING_LOCATION`
+- `DYNAMIC_MEMORY`
+- `SCATTERED_CONFIG`
+- `RTOS_DELAY_REVIEW`
+- `CALLBACK_LENGTH_REVIEW`
+- `WATCHDOG_REVIEW`
+
+Exit code is nonzero when violations are found. With `--strict-review`, review findings also produce a nonzero exit code.
+
+## Fallback Grep Checks
+
+Use the checks below when the Python script is unavailable, when a script finding needs deeper context, or when manually reviewing a narrow rule. Prefer `rg` for text checks. On Windows, use PowerShell snippets only where line counting or structure-aware review is needed. In the commands below, omit directories that do not exist and use `APP` instead of `app` when that is the project's application directory.
 
 ## Dynamic Memory
 
@@ -266,6 +309,7 @@ Default judgment:
 For each reviewed implementation result, report:
 
 - automated checks run
+- `check_layer_dependencies.py` command, exit code, and whether `--include-core`, `--strict-review`, or `--allow` was used
 - hits found
 - judgment for each hit
 - rewrite required or not

@@ -46,6 +46,7 @@ Tell each review subagent to read:
 Each review must check at least:
 
 - whether automated review checks were run first when practical
+- whether `scripts/check_layer_dependencies.py` was run against the CubeMX project root, and whether any `--allow` exceptions were justified
 - whether every automated-check hit is judged as acceptable, needs manual review, or requires rewrite
 - whether the module stays within its ownership boundary
 - whether board binding is kept in a dedicated top-level `Board` or `board` directory and not mixed into `app` or concrete driver folders

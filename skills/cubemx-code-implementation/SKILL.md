@@ -38,7 +38,7 @@ Load these references only when their condition applies:
 - `references/watchdog-safe-startup-rules.md`: read when requirements, software design, CubeMX configuration, or generated code includes IWDG, WWDG, reset-cause handling, startup self-checks, or safe-startup behavior.
 - `references/object-oriented-c-module-architecture.md`: read when designing, implementing, or reviewing module interfaces, concrete drivers, board binding, or business-layer dependencies.
 - `references/subagent-implementation-and-review.md`: read before dispatching or reviewing subagents for independent module-driver work.
-- `references/automated-review-checks.md`: read before reviewing completed implementation work, subagent output, or suspected style violations; run the documented grep-based checks before final manual review when practical.
+- `references/automated-review-checks.md`: read before reviewing completed implementation work, subagent output, or suspected style violations; run `scripts/check_layer_dependencies.py` before final manual review when practical, and use the documented `rg` checks as fallback or follow-up detail.
 - `references/cmake-build-and-openocd-flash.md`: read when the CubeMX project is a CMake/Ninja project, has `CMakePresets.json`, uses `cmake/gcc-arm-none-eabi.cmake`, or the user asks to build, verify, or flash firmware with CMake, Ninja, ARM GCC, or OpenOCD.
 
 When dispatching a subagent, explicitly name the reference files it must read. Do not assume the subagent will infer these rules from this skill.
@@ -179,7 +179,7 @@ Read `references/object-oriented-c-module-architecture.md` for the full pattern,
 9. Integrate accepted drivers through board binding with CubeMX handles, board resources, and project configuration.
 10. Implement application orchestration, business rules, and HMI behavior under `app`.
 11. Connect startup, periodic scheduling, interrupt callbacks, or polling loops through allowed CubeMX integration points.
-12. Build or run available checks when practical.
+12. Run `scripts/check_layer_dependencies.py` against the CubeMX project root when practical, then build or run other available checks.
 13. Report generated files, touched generated files, unresolved assumptions, and user decisions still needed.
 
 ## Parallelization Rules
@@ -210,7 +210,7 @@ Read `references/subagent-implementation-and-review.md` before dispatching imple
 
 ## Subagent Review Requirements
 
-Read `references/subagent-implementation-and-review.md` before reviewing subagent output. At minimum, run automated checks when practical, explicitly judge every hit, verify ownership boundaries, confirm board binding is in a dedicated top-level `Board` or `board` directory, confirm capability interfaces are platform-neutral, and require rewrite for confirmed violations before integration.
+Read `references/subagent-implementation-and-review.md` before reviewing subagent output. At minimum, run `scripts/check_layer_dependencies.py` when practical, explicitly judge every hit, verify ownership boundaries, confirm board binding is in a dedicated top-level `Board` or `board` directory, confirm capability interfaces are platform-neutral, and require rewrite for confirmed violations before integration.
 
 ## Main-Agent Responsibilities
 
@@ -235,7 +235,7 @@ Before claiming completion, verify as many of these as practical:
 - every required external module has a concrete implementation or explicit blocker
 - `Common`, `app` or `APP`, `Module`, `Board` or `board`, and `Config` or `config` integration points are connected to the CubeMX framework
 - edited generated files still preserve CubeMX structure and user sections
-- automated review checks have been run for completed implementation or subagent output when practical, and all hits are explained or corrected
+- `scripts/check_layer_dependencies.py` has been run for completed implementation or subagent output when practical, and all hits are explained or corrected
 - major tunable parameters are centralized and traceable
 - DMA, interrupt, callback, RTOS, and watchdog behavior follow the applicable reference files
 - periodic, interrupt, and communication paths are consistent with the software design
@@ -299,6 +299,7 @@ Summarize:
 - generated files touched and why
 - which tasks were delegated to subagents
 - which reference files were applied for implementation or review
+- layer dependency checker command/result, including whether `--include-core`, `--strict-review`, or `--allow` exceptions were used
 - unresolved assumptions or user decisions still needed
 
 Keep the final response implementation-focused. Do not describe the result as complete if business behavior or HMI logic is still ambiguous.
