@@ -1,5 +1,5 @@
 {
-  "name": "mcu_go",
+  "name": "mcu-go",
   "version": "1.0.0",
   "description": "End-to-end MCU embedded software development plugin for Codex, from requirements and hardware analysis to CubeMX generation, implementation, and GDB/OpenOCD debugging.",
   "author": {
