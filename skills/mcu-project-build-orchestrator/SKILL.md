@@ -11,6 +11,29 @@ Use this skill as the entry point for building a new MCU or STM32CubeMX firmware
 
 Do not use this skill for existing project changes. If the request is to add, modify, remove, fix, refactor, or change hardware in an existing MCU/CubeMX project, use `project-iteration-orchestrator` instead.
 
+## Agent Delegation Policy
+
+The main agent must retain ownership of this orchestrator. Do not delegate `mcu-project-build-orchestrator` itself to a sub agent.
+
+Main agent responsibilities that must not be delegated:
+
+- stage gates and release directory selection
+- user-facing confirmation, clarification, and waiting for CubeMX-generated output
+- cross-stage decisions, conflict handling, and final integration
+- deciding whether blocked downstream work should stop, retry, or change scope
+
+Eligible downstream work may be dispatched to a sub agent only when its inputs are complete, its output boundary is explicit, and it can run without interactive decisions:
+
+- `hardware-interface-writer`: may be delegated for source extraction, feasibility analysis, and a `hardware.json` draft when requirements and source files are available. Missing references, infeasible hardware, or conflicting pin/module choices must return to the main agent.
+- `software-design-doc-writer`: may be delegated to draft `software_design.md` when `requirements.md` and `hardware.json` are complete and no feasibility blocker remains.
+- `cubemx-framework-guide`: may be delegated to draft `cubemx_build.md` or review an already generated CubeMX skeleton. Waiting for the user to generate CubeMX output and asking the user to correct CubeMX settings remain main agent responsibilities.
+- `cubemx-code-implementation`: may be delegated only for independent module drivers or independent implementation review. Business logic, HMI flow, scheduling, startup behavior, callback integration, and final application integration remain main agent responsibilities.
+- `embedded-gdb-openocd-debug`: may be delegated only for complete one-shot scripted checks with known firmware artifacts, probe settings, and expected outputs. Interactive debug sessions remain main agent responsibilities.
+
+Do not delegate `requirements-doc-filling`; it is a continuous interactive requirements collection task and must stay with the main agent.
+
+Every sub agent task must specify the input files, expected output paths, implementation boundaries, forbidden edit areas, and required report contents. If a sub agent finds missing inputs, infeasible hardware, CubeMX/code conflicts, scope expansion, or a need for user confirmation, it must stop and report back to the main agent instead of deciding independently.
+
 ## Release Directory
 
 Use `docs/releases/<version>` as the default document path.
@@ -38,14 +61,14 @@ docs/releases/<version>/
 
 Run the full six-stage flow in order:
 
-1. Use `requirements-doc-filling` to create `docs/releases/<version>/requirements.md`.
-2. Use `hardware-interface-writer` to create `docs/releases/<version>/hardware.json`.
-3. Use `software-design-doc-writer` to create `docs/releases/<version>/software_design.md`.
-4. Use `cubemx-framework-guide` to create `docs/releases/<version>/cubemx_build.md`; then wait for the user to generate the CubeMX framework and review the generated skeleton.
-5. Use `cubemx-code-implementation` to implement application code on top of the CubeMX-generated skeleton.
-6. Use `embedded-gdb-openocd-debug` only when on-target debugging is needed and the hardware/debug environment is available.
+1. Main agent invokes `requirements-doc-filling` directly to create `docs/releases/<version>/requirements.md`.
+2. Main agent invokes directly or dispatches eligible `hardware-interface-writer` work to a sub agent according to the delegation policy to create `docs/releases/<version>/hardware.json`.
+3. Main agent invokes directly or dispatches eligible `software-design-doc-writer` work to a sub agent according to the delegation policy to create `docs/releases/<version>/software_design.md`.
+4. Main agent invokes directly or dispatches eligible `cubemx-framework-guide` work to a sub agent according to the delegation policy to create `docs/releases/<version>/cubemx_build.md`; then the main agent waits for the user to generate the CubeMX framework and controls review of the generated skeleton.
+5. Main agent invokes directly or dispatches eligible `cubemx-code-implementation` work to a sub agent according to the delegation policy to implement application code on top of the CubeMX-generated skeleton.
+6. Main agent invokes directly or dispatches eligible `embedded-gdb-openocd-debug` checks to a sub agent according to the delegation policy only when on-target debugging is needed and the hardware/debug environment is available.
 
-When invoking or following downstream skills, explicitly pass the selected release directory and the outputs from completed stages.
+When invoking or following downstream skills, explicitly pass the selected release directory and the outputs from completed stages. When dispatching a sub agent task, also pass the exact input files, expected output paths, allowed edit scope, forbidden edit areas, stop conditions, and required report contents.
 
 ## Stage Gates
 

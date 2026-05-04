@@ -19,12 +19,35 @@
 
 本插件提供两个主要工作流入口：全新项目创建和已有项目迭代。
 
+### 编排入口与 Sub Agent 边界
+
+`/mcu-project-build-orchestrator` 和 `/project-iteration-orchestrator` 始终由主 agent 运行。主 agent 负责阶段 gate、用户确认、跨阶段决策、冲突处理和最终集成；不要把编排器本身下放给 sub agent。
+
+可在输入齐全、边界明确、无需交互决策时下放的任务包括：
+
+- `hardware-interface-writer` 的资料抽取、可行性分析和 `hardware.json` 草稿或增量更新
+- `software-design-doc-writer` 的 `software_design.md` 初稿或增量更新
+- `cubemx-framework-guide` 的 `cubemx_build.md` 草稿，以及对已生成 CubeMX 骨架的复查
+- `cubemx-code-implementation` 的独立模块驱动实现和独立 review
+- `embedded-gdb-openocd-debug` 的一次性脚本化检查
+
+不可下放的任务包括：
+
+- 编排器本身、阶段 gate、用户确认、冲突确认和最终集成
+- `requirements-doc-filling` 的持续交互式需求收集
+- ECR 创建、影响分析、决策确认，以及 ECR 确认前的任何下游实现
+- 等待用户生成 CubeMX 工程、要求用户修正 CubeMX 配置
+- 业务逻辑、HMI、调度、启动流程和 callback 集成
+- 交互式 GDB/OpenOCD 调试会话
+
+所有 sub agent 任务都需要明确输入文件、输出路径、允许修改范围、禁止改动范围和回报内容。sub agent 遇到缺资料、不可行、范围扩大、兼容性破坏、硬件/CubeMX/代码冲突或需要用户确认时，必须停止并回报主 agent。
+
 ### 创建全新项目
 
 当用户希望从零创建 MCU、STM32 或 CubeMX 固件项目，或者需要从需求开始一直生成到代码时，先使用全新项目编排器：
 
 ```text
-1. /mcu-project-build-orchestrator
+1. 主 agent 运行 /mcu-project-build-orchestrator
 2. /requirements-doc-filling    -> docs/releases/<version>/requirements.md
 3. /hardware-interface-writer   -> docs/releases/<version>/hardware.json
 4. /software-design-doc-writer  -> docs/releases/<version>/software_design.md
@@ -55,7 +78,7 @@
 当用户希望在已有 MCU/CubeMX 项目中新增、修改、删除、修复、重构功能，或调整硬件连接时，先使用迭代编排器：
 
 ```text
-1. /project-iteration-orchestrator -> docs/releases/<next-version>/ecr.md
+1. 主 agent 运行 /project-iteration-orchestrator -> docs/releases/<next-version>/ecr.md
 2. 与用户确认 ECR 决策
 3. 生成或更新 docs/releases/<next-version>/requirements.md
 4. 按需生成或更新 hardware.json、software_design.md、cubemx_build.md
