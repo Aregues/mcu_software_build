@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Iterable, Iterator, Sequence
 
 
-DEFAULT_DIRS = ("Common", "Module", "app", "APP", "Board", "board", "Config", "config")
-CORE_DIRS = ("Core/Src", "Core/Inc")
+DEFAULT_DIRS: tuple[str, ...] = ("Common", "Module", "app", "APP", "Board", "board", "Config", "config")
+CORE_DIRS: tuple[str, ...] = ("Core/Src", "Core/Inc")
 SOURCE_SUFFIXES = {".c", ".h", ".cc", ".hh", ".cpp", ".hpp", ".cxx", ".hxx"}
 
 APP_LAYERS = {"app", "APP"}
