@@ -4,16 +4,16 @@
 
 ## 技能列表
 
-| 技能 | 命令 | 说明 |
-|------|------|------|
-| mcu-project-build-orchestrator | `/mcu-project-build-orchestrator` | 面向全新 MCU/CubeMX 项目的全生命周期编排入口 |
+| 技能                           | 命令                              | 说明                                                |
+| ------------------------------ | --------------------------------- | --------------------------------------------------- |
+| mcu-project-build-orchestrator | `/mcu-project-build-orchestrator` | 面向全新 MCU/CubeMX 项目的全生命周期编排入口        |
 | project-iteration-orchestrator | `/project-iteration-orchestrator` | 面向已有 MCU/CubeMX 项目的 ECR 优先增量迭代编排入口 |
-| requirements-doc-filling | `/requirements-doc-filling` | 交互式收集项目需求，并生成结构化 SRS 需求文档 |
-| hardware-interface-writer | `/hardware-interface-writer` | 分析 MCU 引脚和模块手册，并编写硬件连接 JSON |
-| software-design-doc-writer | `/software-design-doc-writer` | 基于需求文档和硬件连接信息自动生成软件设计文档 |
-| cubemx-framework-guide | `/cubemx-framework-guide` | 生成 CubeMX 配置步骤指南，并检查生成后的工程框架 |
-| cubemx-code-implementation | `/cubemx-code-implementation` | 在 CubeMX 生成的工程骨架上实现完整应用代码 |
-| embedded-gdb-openocd-debug | `/embedded-gdb-openocd-debug` | 使用 OpenOCD 和 arm-none-eabi-gdb 调试 STM32 固件 |
+| requirements-doc-filling       | `/requirements-doc-filling`       | 交互式收集项目需求，并生成结构化 SRS 需求文档       |
+| hardware-interface-writer      | `/hardware-interface-writer`      | 分析 MCU 引脚和模块手册，并编写硬件连接 JSON        |
+| software-design-doc-writer     | `/software-design-doc-writer`     | 基于需求文档和硬件连接信息自动生成软件设计文档      |
+| cubemx-framework-guide         | `/cubemx-framework-guide`         | 生成 CubeMX 配置步骤指南，并检查生成后的工程框架    |
+| cubemx-code-implementation     | `/cubemx-code-implementation`     | 在 CubeMX 生成的工程骨架上实现完整应用代码          |
+| embedded-gdb-openocd-debug     | `/embedded-gdb-openocd-debug`     | 使用 OpenOCD 和 arm-none-eabi-gdb 调试 STM32 固件   |
 
 ## 推荐工作流
 
@@ -99,11 +99,61 @@ docs/
 
 ## 安装
 
-将 `mcu_go` 文件夹放入 Claude Code 工作区，或使用以下命令安装：
+### Claude Code
+
+1. 启动 Claude Code：
 
 ```bash
-claude plugin add /path/to/mcu_go
+claude
 ```
+
+2. 在 Claude Code 会话中添加插件市场：
+
+```text
+/plugin marketplace add Aregues/mcu_go
+```
+
+也可以使用完整 Git 地址：
+
+```text
+/plugin marketplace add https://github.com/Aregues/mcu_go.git
+```
+
+3. 确认市场已经添加：
+
+```text
+/plugin marketplace list
+```
+
+4. 从市场安装插件：
+
+```text
+/plugin install mcu-go@Simon
+```
+
+5. 按 Claude Code 提示确认安装，并重启 Claude Code。重启后可通过 `/help` 查看本插件提供的命令，例如 `/mcu-project-build-orchestrator`。
+
+### Codex
+
+1. 命令行中添加市场
+
+```bash
+codex plugin marketplace add Aregues/mcu_go
+```
+
+2. 进入 codex
+
+```bash
+codex
+```
+
+3. 进入插件管理
+
+```bash
+/plugins
+```
+
+4. 安装对应插件，按“→”切换至“simon”栏，选择“mcu-go”安装插件
 
 ## 项目结构
 
