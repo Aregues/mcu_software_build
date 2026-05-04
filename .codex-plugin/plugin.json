@@ -7,6 +7,8 @@
     "email": "devtools@example.com"
   },
   "license": "Proprietary",
+  "homepage": "https://github.com/Aregues/mcu_go",
+  "repository": "https://github.com/Aregues/mcu_go.git",
   "keywords": [
     "mcu",
     "embedded",
