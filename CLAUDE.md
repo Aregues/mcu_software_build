@@ -1,59 +1,50 @@
 # CLAUDE.md
 
-## Project Context
-- This is an STM32 firmware project built on STM32CubeMX-generated code.
-- Keep the existing CubeMX project structure intact. Do not rewrite the project into a generic desktop-style layout.
-- Prioritize small, local changes that preserve architecture and hardware behavior.
+## Baseline
 
-## Source Of Truth
-- Requirements and behavior come from project docs, not guesses.
-- CubeMX-generated configuration, peripheral handles, startup files, and linker settings are the hardware integration baseline.
-- When requirements, design, and generated code conflict, identify the gap explicitly before implementing around it.
+- STM32 firmware project based on STM32CubeMX-generated code. Preserve the generated layout, startup files, linker scripts, middleware, and peripheral integration.
+- Requirements come from project docs and existing code. If docs, design, and generated code conflict, call out the gap before coding.
+- Prefer small, local changes that preserve architecture and hardware behavior.
 
-## Directory Ownership
-- `Core/`, `Drivers/`, `Middlewares/`, startup files, linker scripts: generated or vendor-owned foundation. Edit minimally.
-- `app/`: business logic, state machines, orchestration, HMI, system policy.
-- `Module/`: reusable module interfaces and concrete device drivers.
-- `Board/` or `board/`: hardware binding, object creation, resource injection, concrete-driver initialization.
-- `Config/` or `config/`: project-level tunable parameters and feature switches.
+## Layers
+
+- `Core/`, `Drivers/`, `Middlewares/`, startup files, linker scripts: vendor/generated foundation. Edit minimally, preferably inside stable extension points such as `USER CODE BEGIN/END`.
+- `app/`: business logic, state machines, orchestration, HMI, and system policy.
+- `Module/`: reusable interfaces and concrete device drivers.
+- `Board/` or `board/`: hardware binding, object creation, resource injection, and concrete-driver initialization.
+- `Config/` or `config/`: timeouts, thresholds, retry counts, periods, calibration values, feature switches, and board/project tunables.
 
 ## Dependency Rules
-- `app` depends on abstract interfaces only. Do not include HAL headers or concrete driver headers in `app`.
-- `Module` must not depend on `app`.
-- `Board` may depend on CubeMX handles and concrete drivers, and passes abstract interfaces upward to `app`.
-- Core interface headers must stay platform-neutral and must not include HAL, register, CubeMX, or board-specific headers.
 
-## C Module Pattern
+- `app` depends on abstract interfaces only; it must not include HAL, register, CubeMX, board, or concrete-driver headers.
+- `Module` must not depend on `app`.
+- `Board` may depend on CubeMX handles and concrete drivers, then pass abstract interfaces upward to `app`.
+- Core interface headers must stay platform-neutral.
+- Keep board-specific mapping and resource selection out of business logic.
+
+## Module Style
+
 - Use object-oriented C for modules unless the project already has a stronger local convention.
-- Keep a stable base interface plus wrapper functions in the core module files.
-- Put the base struct as the first member of each derived struct.
-- Dispatch behavior through an ops table or equivalent indirection.
+- Keep a stable base interface plus wrapper functions in core module files.
+- Put the base struct first in derived structs.
+- Dispatch through an ops table or equivalent indirection.
 - Business code uses abstract pointers only; do not cast to concrete driver types in `app`.
 
-## CubeMX Integration Rules
-- Do not move or reorganize CubeMX-generated folders.
-- Prefer edits inside `USER CODE BEGIN/END` blocks and other stable extension points.
-- Reuse generated handles such as `hi2c*`, `huart*`, `htim*`, DMA links, and RTOS objects instead of duplicating initialization.
+## Hardware Integration
+
+- Reuse generated handles such as `hi2c*`, `huart*`, `htim*`, DMA links, interrupts, and RTOS objects.
 - If a required peripheral, interrupt, DMA path, or middleware feature is missing, classify it as a configuration gap, design gap, or implementation gap.
-
-## Interrupt And RTOS Rules
-- Keep ISR work minimal; hand off to main loop or tasks through flags, queues, or buffers.
-- Do not put business policy or heavy parsing directly in callbacks or interrupts.
+- Keep ISR/callback work minimal; hand off to main loop or tasks through flags, queues, buffers, or RTOS-safe APIs.
+- Do not put business policy, heavy parsing, blocking calls, or invalid-context RTOS calls in interrupts/callbacks.
 - Make buffer ownership and ISR/task handoff explicit when using DMA, callbacks, or shared state.
-- In RTOS projects, use APIs that are valid for the current context and avoid blocking in the wrong context.
 
-## Configuration Rules
-- Centralize timeouts, thresholds, retry counts, periods, calibration values, and feature switches under `Config`.
-- Avoid magic numbers in business logic and drivers.
-- Keep board-specific mapping and resource selection out of `app`.
+## Changes And Validation
 
-## Change Rules
-- Do not perform broad refactors unless the task explicitly requires them.
-- Do not modify unrelated files.
-- Do not silently mix business logic into drivers or hardware details into `app`.
+- Do not perform broad refactors or modify unrelated files unless explicitly required.
+- Do not mix business logic into drivers or hardware details into `app`.
 - If generated files must be edited, keep the diff minimal and explain why.
-
-## Validation And Reporting
+- Avoid magic numbers outside `Config`/`config`.
+- Use Conventional Commits: `<type>(<scope>): <subject>`.
 - After changes, verify include dependencies, layer boundaries, and obvious integration issues.
-- Build, syntax-check, or run available verification steps when practical; if not possible, say so explicitly.
+- Build, syntax-check, or run available verification when practical; if not possible, say so.
 - Report changed files, touched generated files, unresolved assumptions, and remaining risks.
