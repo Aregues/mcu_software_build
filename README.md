@@ -13,6 +13,7 @@
 | software-design-doc-writer     | `/software-design-doc-writer`     | 基于需求文档和硬件连接信息自动生成软件设计文档      |
 | cubemx-framework-guide         | `/cubemx-framework-guide`         | 生成 CubeMX 配置步骤指南，并检查生成后的工程框架    |
 | cubemx-code-implementation     | `/cubemx-code-implementation`     | 在 CubeMX 生成的工程骨架上实现完整应用代码          |
+| tdd-development                | `/tdd-development`                | 基于软件设计文档先写主机侧测试，再分片实现固件行为  |
 | embedded-gdb-openocd-debug     | `/embedded-gdb-openocd-debug`     | 使用 OpenOCD 和 arm-none-eabi-gdb 调试 STM32 固件   |
 
 ## 推荐工作流
@@ -28,7 +29,8 @@
 - `hardware-interface-writer` 的资料抽取、可行性分析和 `hardware.json` 草稿或增量更新
 - `software-design-doc-writer` 的 `software_design.md` 初稿或增量更新
 - `cubemx-framework-guide` 的 `cubemx_build.md` 草稿，以及对已生成 CubeMX 骨架的复查
-- `cubemx-code-implementation` 的独立模块驱动实现和独立 review
+- `tdd-development` 的独立测试优先实现分片
+- `cubemx-code-implementation` 的独立模块驱动实现、直接非 TDD 实现和独立 review
 - `embedded-gdb-openocd-debug` 的一次性脚本化检查
 
 不可下放的任务包括：
@@ -52,7 +54,7 @@
 3. /hardware-interface-writer   -> docs/releases/<version>/hardware.json
 4. /software-design-doc-writer  -> docs/releases/<version>/software_design.md
 5. /cubemx-framework-guide      -> docs/releases/<version>/cubemx_build.md -> 用户在 CubeMX 中生成工程 -> 复查
-6. /cubemx-code-implementation  -> 基于 CubeMX 工程骨架生成 app/ 和 Module/ 代码
+6. /tdd-development 或 /cubemx-code-implementation -> 基于 CubeMX 工程骨架实现代码
 7. /embedded-gdb-openocd-debug  -> 在需要时进行板上调试
 ```
 
@@ -69,9 +71,11 @@
 2. /hardware-interface-writer   -> docs/releases/<version>/hardware.json
 3. /software-design-doc-writer  -> docs/releases/<version>/software_design.md
 4. /cubemx-framework-guide      -> docs/releases/<version>/cubemx_build.md -> 用户在 CubeMX 中生成工程 -> 复查
-5. /cubemx-code-implementation  -> 基于 CubeMX 工程骨架生成 app/ 和 Module/ 代码
+5. /tdd-development 或 /cubemx-code-implementation -> 基于 CubeMX 工程骨架实现代码
 6. /embedded-gdb-openocd-debug  -> 板上调试会话
 ```
+
+实现阶段由主 agent 根据设计文档和本地可验证性选择路径：当行为可通过主机侧测试验证、变更复杂或用户明确要求 TDD 时，优先使用 `tdd-development`；当工作偏 CubeMX/HAL 集成、构建烧录、直接驱动实现或主机侧测试不现实时，使用 `cubemx-code-implementation`。
 
 ### 迭代已有项目
 
@@ -82,7 +86,7 @@
 2. 与用户确认 ECR 决策
 3. 生成或更新 docs/releases/<next-version>/requirements.md
 4. 按需生成或更新 hardware.json、software_design.md、cubemx_build.md
-5. 仅应用 ECR 所要求的增量 CubeMX 或代码变更
+5. 通过 /tdd-development 或 /cubemx-code-implementation 仅应用 ECR 所要求的增量 CubeMX 或代码变更
 6. 在 ecr.md 中记录验证结果和验收结论
 ```
 
@@ -213,6 +217,11 @@ mcu_go/
     |   |-- SKILL.md
     |   |-- agents/openai.yaml
     |   `-- references/
+    |-- tdd-development/                 # 技能 5b：测试优先实现
+    |   |-- SKILL.md
+    |   |-- agents/openai.yaml
+    |   |-- references/
+    |   `-- scripts/
     `-- embedded-gdb-openocd-debug/      # 技能 6：GDB/OpenOCD 调试
         |-- SKILL.md
         |-- agents/openai.yaml
@@ -222,6 +231,7 @@ mcu_go/
 ## 环境要求
 
 - Python 3：用于 `hardware-interface-writer` 中的 `pdf_to_md.py` 转换模块手册或补充 PDF
+- MinGW GCC：用于 `tdd-development` 的主机侧 C 单元测试
 - ARM GCC 工具链：例如 `arm-none-eabi-gcc`，用于构建验证
 - OpenOCD 和 ST-Link：用于板上调试
 - STM32CubeMX：用于生成工程框架
