@@ -113,7 +113,7 @@ docs/
 |       |-- manual.md
 |       `-- source files such as PDFs or images
 `-- mcu/
-    `-- pin-definition source files and converted markdown
+    `-- ST official MCU XML files from STM32_open_pin_data
 ```
 
 未指定版本时，`/mcu-project-build-orchestrator` 和其它全新项目技能会使用 `docs/releases` 下最新的语义化版本；如果不存在任何历史版本，则创建 `docs/releases/v0.1`。
@@ -221,7 +221,7 @@ mcu_go/
 
 ## 环境要求
 
-- Python 3：用于 `hardware-interface-writer` 中的 `pdf_to_md.py`
+- Python 3：用于 `hardware-interface-writer` 中的 `pdf_to_md.py` 转换模块手册或补充 PDF
 - ARM GCC 工具链：例如 `arm-none-eabi-gcc`，用于构建验证
 - OpenOCD 和 ST-Link：用于板上调试
 - STM32CubeMX：用于生成工程框架

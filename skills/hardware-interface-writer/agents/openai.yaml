@@ -1,4 +1,4 @@
 interface:
   display_name: "Hardware Interface Writer"
   short_description: "Analyze MCU manuals and write interface JSON"
-  default_prompt: "Use $hardware-interface-writer to confirm docs/releases/<version>/requirements.md, collect MCU pin definitions and module folders under docs\\modules, textify PDFs, inspect images for exposed pins, analyze feasibility, and write docs/releases/<version>/hardware.json if feasible."
+  default_prompt: "Use $hardware-interface-writer to confirm docs/releases/<version>/requirements.md, extract the target STM32 MCU model, fetch the matching ST MCU XML under docs\\mcu, collect module folders under docs\\modules, textify supplemental PDFs, inspect images for exposed pins, analyze feasibility, and write docs/releases/<version>/hardware.json if feasible."

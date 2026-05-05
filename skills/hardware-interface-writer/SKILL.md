@@ -1,11 +1,11 @@
 ---
 name: hardware-interface-writer
-description: Guide MCU hardware interface feasibility analysis and hardware connection file writing. Use when Codex needs to confirm a release requirements document, collect an MCU pin definition table or pinout diagram, collect module manuals organized under docs/modules/module-name folders with PDFs and images, convert module manuals and MCU pin-definition PDFs to Markdown, extract image-confirmed exposed module pins, analyze module and MCU peripheral sufficiency, and write docs/releases/VERSION/hardware.json when the design is feasible.
+description: Guide MCU hardware interface feasibility analysis and hardware connection file writing. Use when Codex needs to confirm a release requirements document, locate the target STM32 MCU model, fetch the matching STMicroelectronics STM32_open_pin_data XML under docs/mcu, collect module manuals organized under docs/modules/module-name folders with PDFs and images, convert supplemental PDF module/manual sources to Markdown, extract image-confirmed exposed module pins, analyze module and MCU peripheral sufficiency, and write docs/releases/VERSION/hardware.json when the design is feasible.
 ---
 
 # Hardware Interface Writer
 
-Use this skill to turn a requirement document, MCU pin information, and module manuals into a feasibility decision and a hardware connection file.
+Use this skill to turn a requirement document, ST MCU XML pin data, and module manuals into a feasibility decision and a hardware connection file.
 
 ## Release Document Layout
 
@@ -25,21 +25,29 @@ If the user names a release version, use that version exactly after sanitizing i
 ## Required Inputs
 
 - Requirement document: confirm the active release first and use `docs/releases/<version>/requirements.md`. If the user has not identified a release and multiple releases exist, choose the newest semantic version unless the user asks for another one.
-- MCU pin definition table: always request it. Treat this as required for final pin allocation.
-- MCU pin definition PDF (when the pin definition table or pinout is provided as PDF): collect it and convert it to Markdown before feasibility analysis. Recommended location is `docs\mcu\`.
-- MCU pinout diagram: request it when the pin table does not include multiplexing, package pins, power pins, or alternate functions clearly enough.
+- STM32 MCU model: extract the complete ordering code from `requirements.md` or the user's input, for example `STM32F103C8T6`. The model must be specific enough to determine package, memory/capacity, and ordering suffix.
+- ST MCU XML: use STMicroelectronics' official `STM32_open_pin_data` repository as the default MCU pin data source. Fetch the matching XML from `https://github.com/STMicroelectronics/STM32_open_pin_data/tree/master/mcu` and save it under `docs\mcu\`.
+- MCU source trace: record the source repository URL, download date, and matched XML filename in the report and in project notes when notes are being updated.
+- Supplemental MCU PDFs or images: request them only when the ST repository has no matching XML, the MCU model is incomplete or ambiguous, the package suffix cannot be determined, or the user explicitly provides supplemental datasheets/pinout images.
 - Module manuals: request module folders under `docs\modules\<module-name>` for modules that implement required functions. Each module folder may contain PDFs and images. Do not require manuals for basic parts such as buttons, LEDs, simple resistors, or generic pull-ups unless the user asks for them.
 
 ## Workflow
 
 1. Confirm the requirement document and extract the required hardware-facing functions: sensors, communication links, displays, actuators, buttons, debug interfaces, power rails, voltage constraints, and quantity requirements.
-2. Ask for the MCU pin definition table if it is missing. If the requirement-to-pin analysis depends on unavailable pin information, stop and request it instead of guessing.
+2. Locate the target STM32 MCU model and fetch the ST XML:
+   - Extract a complete MCU ordering code from `requirements.md` or the user request, such as `STM32F103C8T6`.
+   - Match the ordering code against `STM32_open_pin_data/mcu/<device-pattern>.xml`. ST XML names may include grouped or wildcard capacity/package fields, such as `STM32F103C(8-B)Tx.xml`; treat grouped ranges and `x` suffixes as pattern matches only when the concrete ordering code fits them.
+   - For `STM32F103C8T6`, a valid match is an XML whose device pattern covers `STM32F103C`, capacity `8`, package `T`, and temperature/suffix `6`, for example `STM32F103C(8-B)Tx.xml`.
+   - If multiple XML files plausibly match, choose the one with the exact package and narrowest compatible capacity group. If ambiguity remains, stop and ask the user to confirm the exact MCU/package.
+   - Download the matching XML from the raw GitHub URL and save it under `docs\mcu\` using the upstream filename.
+   - Record the source URL, download date, and matched XML filename in the output report and any release notes you update.
+   - If the model is incomplete, no ST XML exists, or the package/suffix cannot be determined, stop and request the missing ordering code or supplemental datasheet/pinout source instead of guessing.
 3. Ask for module manuals for non-basic modules needed by the requirement. Prefer `docs\modules\<module-name>\` folders containing all related PDFs and images. Keep a short intake table with module name, required function, provided files, and status. Legacy flat folders such as `docs\modules\pdf`, `docs\modules\image`, and `docs\modules\markdown` may exist, but prefer the module-folder layout when both are present.
 4. Perform a shallow sufficiency check before conversion:
    - Mark a module `likely sufficient` only if its name or visible metadata clearly matches the required function.
    - Mark it `unclear` when the interface, voltage, range, channel count, or protocol cannot be confirmed yet.
    - Mark it `insufficient` when the visible information already conflicts with the requirement.
-5. Convert PDFs to Markdown with the bundled script, including both module manuals and MCU pin-definition PDFs. Do not call or depend on any external PDF-conversion skill. In the preferred module layout, the script writes `docs\modules\<module-name>\manual.md`, textifies PDFs first, and appends image-review placeholders.
+5. Convert supplemental PDFs to Markdown with the bundled script. This is required for module manuals provided as PDFs and optional for supplemental MCU datasheets/pinout PDFs; it does not replace the ST XML default source. Do not call or depend on any external PDF-conversion skill. In the preferred module layout, the script writes `docs\modules\<module-name>\manual.md`, textifies PDFs first, and appends image-review placeholders.
 
    The script requires `PyMuPDF`. Install it once before first use:
 
@@ -51,10 +59,10 @@ If the user names a release version, use that version exactly after sanitizing i
 python "<skill_dir>\scripts\pdf_to_md.py" --modules-dir ".\docs\modules"
 ```
 
-Also convert MCU pin-definition PDFs to Markdown before pin allocation analysis (example output folder under `docs\mcu\markdown`):
+If the user provides a supplemental MCU PDF, convert it to Markdown as supporting evidence only:
 
 ```powershell
-python "<skill_dir>\scripts\pdf_to_md.py" ".\docs\mcu\pin_definition.pdf" --output-dir ".\docs\mcu\markdown"
+python "<skill_dir>\scripts\pdf_to_md.py" ".\docs\mcu\supplemental_pinout.pdf" --output-dir ".\docs\mcu\markdown"
 ```
 
 For a specific module folder:
@@ -71,11 +79,13 @@ python "<skill_dir>\scripts\pdf_to_md.py" --source-dir ".\docs\modules\pdf" --ou
 
 6. Review each image referenced in `manual.md` and fill the image-review placeholder with only image-confirmed hardware facts: exposed module pins, terminal labels, connector direction, voltage labels, jumper/solder-pad settings, and special wiring notes. If a PDF chip manual and a module image disagree, use the image-confirmed module-exposed pins in the connection file. Mark anything unreadable or not visible as `unclear`; do not guess or substitute bare IC pins for module connector pins.
 7. Deep-analyze the converted Markdown manuals. For each module, extract only hardware-relevant facts: supply voltage, logic level, interface type, exposed module pin names, signal direction, required pull-ups or level shifting, UART/I2C/SPI parameters, channel counts, timing constraints, and special electrical notes.
-8. Analyze MCU feasibility from the converted manuals and MCU pin definition table:
+8. Analyze MCU feasibility directly from `docs\mcu\*.xml` plus the converted module manuals:
    - Check whether required peripherals are available in sufficient count: GPIO, EXTI, ADC, DAC, PWM, timers, UART/USART, I2C, SPI, CAN, USB, and any project-specific interface.
    - Check whether chosen MCU pins can legally provide the required alternate functions.
    - Check whether any pin is double-booked, reserved for boot/debug/oscillator/reset, or unavailable in the package.
+   - Check package-specific pin availability, power pins, reset/boot/debug pins, and reserved pins from the XML before assigning functions.
    - Check whether voltage levels and power rails are compatible or need level shifting/regulation.
+   - Use supplemental MCU PDF/image information only to resolve gaps or conflicts; record when it differs from the ST XML.
    - Record assumptions instead of silently filling gaps.
 9. If feasible, read `references/hardware_interface_spec.md` and write the hardware connection file in that schema. Use the fixed output path `docs\releases\<version>\hardware.json`. Create `docs\releases\<version>` when it does not exist. Inspect any existing `hardware.json` before overwriting it.
 10. If not feasible, do not write the connection file unless the user explicitly requests a partial draft. Report the blocking issues and the specific data or hardware change needed to proceed.
@@ -88,7 +98,8 @@ When reporting results, include:
 - Inputs still missing, if any.
 - Module sufficiency summary with `likely sufficient`, `unclear`, or `insufficient`.
 - Manual files used, including module `manual.md` files and any image-confirmed exposed pin overrides.
-- Converted MCU pin-definition Markdown files used (when MCU pin definition was provided as PDF).
+- ST MCU XML files used, including source URL, download date, and matched XML filename.
+- Supplemental MCU PDF/Image/Markdown files used, if any.
 - MCU pin/peripheral allocation table when enough pin data is available.
 - Feasibility decision: `feasible`, `feasible with assumptions`, or `not feasible`.
 - Created or updated hardware connection file path when a file was written.
