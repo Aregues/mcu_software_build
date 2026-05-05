@@ -24,10 +24,11 @@ Main agent responsibilities that must not be delegated:
 
 Eligible downstream work may be dispatched to a sub agent only when its inputs are complete, its output boundary is explicit, and it can run without interactive decisions:
 
-- `hardware-interface-writer`: may be delegated for source extraction, feasibility analysis, and a `hardware.json` draft when requirements and source files are available. Missing references, infeasible hardware, or conflicting pin/module choices must return to the main agent.
+- `hardware-interface-writer`: may be delegated for source extraction, feasibility analysis, and a `hardware.json` draft when requirements identify a concrete MCU model, the matching ST XML is obtainable, and module sources are available. Missing references, infeasible hardware, or conflicting pin/module choices must return to the main agent.
 - `software-design-doc-writer`: may be delegated to draft `software_design.md` when `requirements.md` and `hardware.json` are complete and no feasibility blocker remains.
 - `cubemx-framework-guide`: may be delegated to draft `cubemx_build.md` or review an already generated CubeMX skeleton. Waiting for the user to generate CubeMX output and asking the user to correct CubeMX settings remain main agent responsibilities.
-- `cubemx-code-implementation`: may be delegated only for independent module drivers or independent implementation review. Business logic, HMI flow, scheduling, startup behavior, callback integration, and final application integration remain main agent responsibilities.
+- `tdd-development`: may be delegated for independent test-first implementation slices when `software_design.md` is complete, behavior can be exercised by host-side tests, and explicit write boundaries are available. Prefer it for new feature behavior, design-driven implementation, complex logic, and user-requested TDD. The main agent still owns slice selection, architecture, shared-state sequencing, final integration, and acceptance reporting.
+- `cubemx-code-implementation`: may be delegated only for independent module drivers, direct non-TDD implementation, build/flash-oriented work, or independent implementation review. Business logic, HMI flow, scheduling, startup behavior, callback integration, and final application integration remain main agent responsibilities.
 - `embedded-gdb-openocd-debug`: may be delegated only for complete one-shot scripted checks with known firmware artifacts, probe settings, and expected outputs. Interactive debug sessions remain main agent responsibilities.
 
 Do not delegate `requirements-doc-filling`; it is a continuous interactive requirements collection task and must stay with the main agent.
@@ -65,7 +66,9 @@ Run the full six-stage flow in order:
 2. Main agent invokes directly or dispatches eligible `hardware-interface-writer` work to a sub agent according to the delegation policy to create `docs/releases/<version>/hardware.json`.
 3. Main agent invokes directly or dispatches eligible `software-design-doc-writer` work to a sub agent according to the delegation policy to create `docs/releases/<version>/software_design.md`.
 4. Main agent invokes directly or dispatches eligible `cubemx-framework-guide` work to a sub agent according to the delegation policy to create `docs/releases/<version>/cubemx_build.md`; then the main agent waits for the user to generate the CubeMX framework and controls review of the generated skeleton.
-5. Main agent invokes directly or dispatches eligible `cubemx-code-implementation` work to a sub agent according to the delegation policy to implement application code on top of the CubeMX-generated skeleton.
+5. Main agent chooses the implementation path on top of the CubeMX-generated skeleton:
+   - use `tdd-development` directly or dispatch eligible independent TDD slices when the software design defines testable behavior, host-side tests are practical, or the user explicitly asks for TDD
+   - use `cubemx-code-implementation` directly or dispatch eligible work for direct implementation, build integration, flashing, non-TDD implementation, or CubeMX/HAL-heavy work where host tests are not the primary path
 6. Main agent invokes directly or dispatches eligible `embedded-gdb-openocd-debug` checks to a sub agent according to the delegation policy only when on-target debugging is needed and the hardware/debug environment is available.
 
 When invoking or following downstream skills, explicitly pass the selected release directory and the outputs from completed stages. When dispatching a sub agent task, also pass the exact input files, expected output paths, allowed edit scope, forbidden edit areas, stop conditions, and required report contents.

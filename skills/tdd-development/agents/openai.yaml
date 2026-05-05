@@ -1,0 +1,4 @@
+interface:
+  display_name: "嵌入式 TDD 开发"
+  short_description: "Run test-first embedded implementation slices"
+  default_prompt: "Use $tdd-development to implement MCU firmware behavior from docs/releases/<version>/software_design.md with host-side tests in test/ before code changes."
