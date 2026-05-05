@@ -117,7 +117,8 @@ docs/
 |       |-- manual.md
 |       `-- source files such as PDFs or images
 `-- mcu/
-    `-- ST official MCU XML files from STM32_open_pin_data
+    |-- ST official MCU XML files from STM32_open_pin_data
+    `-- <xml-file>.source.json
 ```
 
 未指定版本时，`/mcu-project-build-orchestrator` 和其它全新项目技能会使用 `docs/releases` 下最新的语义化版本；如果不存在任何历史版本，则创建 `docs/releases/v0.1`。
@@ -204,7 +205,9 @@ mcu_go/
     |   |-- SKILL.md
     |   |-- agents/openai.yaml
     |   |-- references/
-    |   `-- scripts/pdf_to_md.py
+    |   `-- scripts/
+    |       |-- fetch_stm32_pin_xml.py   # 按 STM32 订货码拉取官方引脚 XML
+    |       `-- pdf_to_md.py
     |-- software-design-doc-writer/      # 技能 3：软件设计文档
     |   |-- SKILL.md
     |   |-- agents/openai.yaml
@@ -230,7 +233,7 @@ mcu_go/
 
 ## 环境要求
 
-- Python 3：用于 `hardware-interface-writer` 中的 `pdf_to_md.py` 转换模块手册或补充 PDF
+- Python 3：用于 `hardware-interface-writer` 中的 `fetch_stm32_pin_xml.py` 拉取 ST 官方 MCU 引脚 XML，以及用 `pdf_to_md.py` 转换模块手册或补充 PDF
 - MinGW GCC：用于 `tdd-development` 的主机侧 C 单元测试
 - ARM GCC 工具链：例如 `arm-none-eabi-gcc`，用于构建验证
 - OpenOCD 和 ST-Link：用于板上调试

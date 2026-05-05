@@ -26,8 +26,8 @@ If the user names a release version, use that version exactly after sanitizing i
 
 - Requirement document: confirm the active release first and use `docs/releases/<version>/requirements.md`. If the user has not identified a release and multiple releases exist, choose the newest semantic version unless the user asks for another one.
 - STM32 MCU model: extract the complete ordering code from `requirements.md` or the user's input, for example `STM32F103C8T6`. The model must be specific enough to determine package, memory/capacity, and ordering suffix.
-- ST MCU XML: use STMicroelectronics' official `STM32_open_pin_data` repository as the default MCU pin data source. Fetch the matching XML from `https://github.com/STMicroelectronics/STM32_open_pin_data/tree/master/mcu` and save it under `docs\mcu\`.
-- MCU source trace: record the source repository URL, download date, and matched XML filename in the report and in project notes when notes are being updated.
+- ST MCU XML: use the bundled `scripts\fetch_stm32_pin_xml.py` first. It matches the complete STM32 ordering code against a built-in list of official `STM32_open_pin_data/mcu` XML filenames, downloads the unique match to `docs\mcu\`, and writes a sibling `.source.json` trace file. If it returns candidates instead of downloading, rerun it with a more specific ordering code.
+- MCU source trace: record the source repository URL, download date, matched XML filename, and `.source.json` path in the report and in project notes when notes are being updated.
 - Supplemental MCU PDFs or images: request them only when the ST repository has no matching XML, the MCU model is incomplete or ambiguous, the package suffix cannot be determined, or the user explicitly provides supplemental datasheets/pinout images.
 - Module manuals: request module folders under `docs\modules\<module-name>` for modules that implement required functions. Each module folder may contain PDFs and images. Do not require manuals for basic parts such as buttons, LEDs, simple resistors, or generic pull-ups unless the user asks for them.
 
@@ -36,12 +36,17 @@ If the user names a release version, use that version exactly after sanitizing i
 1. Confirm the requirement document and extract the required hardware-facing functions: sensors, communication links, displays, actuators, buttons, debug interfaces, power rails, voltage constraints, and quantity requirements.
 2. Locate the target STM32 MCU model and fetch the ST XML:
    - Extract a complete MCU ordering code from `requirements.md` or the user request, such as `STM32F103C8T6`.
-   - Match the ordering code against `STM32_open_pin_data/mcu/<device-pattern>.xml`. ST XML names may include grouped or wildcard capacity/package fields, such as `STM32F103C(8-B)Tx.xml`; treat grouped ranges and `x` suffixes as pattern matches only when the concrete ordering code fits them.
-   - For `STM32F103C8T6`, a valid match is an XML whose device pattern covers `STM32F103C`, capacity `8`, package `T`, and temperature/suffix `6`, for example `STM32F103C(8-B)Tx.xml`.
-   - If multiple XML files plausibly match, choose the one with the exact package and narrowest compatible capacity group. If ambiguity remains, stop and ask the user to confirm the exact MCU/package.
-   - Download the matching XML from the raw GitHub URL and save it under `docs\mcu\` using the upstream filename.
-   - Record the source URL, download date, and matched XML filename in the output report and any release notes you update.
-   - If the model is incomplete, no ST XML exists, or the package/suffix cannot be determined, stop and request the missing ordering code or supplemental datasheet/pinout source instead of guessing.
+   - Run the bundled fetch script from the repository root:
+
+```powershell
+python ".\skills\hardware-interface-writer\scripts\fetch_stm32_pin_xml.py" STM32F103C8T6 --output-dir ".\docs\mcu"
+```
+
+   - The script treats ST filename `x` characters as single-character wildcards and grouped fields such as `(8-B)` or `(C-E)` as ordering-code character ranges. For `STM32F103C8T6`, the expected unique match is `STM32F103C(8-B)Tx.xml`.
+   - If the XML already exists, the script leaves it in place unless `--force` is supplied. Use `--dry-run` to verify matching without writing files, and `--json` when another tool needs structured output.
+   - If the input is incomplete or ambiguous, the script prints the top candidates and exits non-zero instead of choosing one. Stop and request the missing package/capacity/suffix or rerun with a more precise ordering code.
+   - Record the raw source URL, download date, matched XML filename, and `docs\mcu\<xml-file>.source.json` path in the output report and any release notes you update.
+   - If no ST XML exists after a precise ordering code is provided, request supplemental datasheet/pinout source instead of guessing.
 3. Ask for module manuals for non-basic modules needed by the requirement. Prefer `docs\modules\<module-name>\` folders containing all related PDFs and images. Keep a short intake table with module name, required function, provided files, and status. Legacy flat folders such as `docs\modules\pdf`, `docs\modules\image`, and `docs\modules\markdown` may exist, but prefer the module-folder layout when both are present.
 4. Perform a shallow sufficiency check before conversion:
    - Mark a module `likely sufficient` only if its name or visible metadata clearly matches the required function.
