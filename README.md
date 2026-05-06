@@ -211,11 +211,11 @@ mcu_go/
 
 - Python 3：用于 `hardware-interface-writer` 中的 `fetch_stm32_pin_xml.py` 拉取 ST 官方 MCU 引脚 XML，以及用 `pdf_to_md.py` 转换模块手册或补充 PDF
 - MinGW GCC：用于 `tdd-development` 的主机侧 C 单元测试
-- ARM GCC 工具链：例如 `arm-none-eabi-gcc`，用于构建验证
+- ARM GCC 工具链：例如 `arm-none-eabi-gcc`，用于构建验证，建议使用CubeIDE上自带版本
 - OpenOCD 和 ST-Link：用于板上调试
 - STM32CubeMX：用于生成工程框架
 
-请确保上述工具已添加到PATH且在终端中可用，否则Agent会自动搜索工具，这可能造成不确定性行为
+请确保上述工具已添加到PATH且在终端中可用，否则Agent会自动搜索工具，这可能造成不确定性行为。可以通过 ClaudeCode & Codex 在正式使用前辅助调试
 
 ## 许可证
 
